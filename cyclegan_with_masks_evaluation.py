@@ -14,7 +14,7 @@ from PIL import Image
 
 # Load previously-saved model checkpoint
 checkpoint_path = '/your/model checkpoints/folder'
-epoch_to_load = #latest_model_checkpoint_saved
+epoch_to_load = # latest_model_checkpoint_saved e.g. 1000 if training stopped at epoch1000
 generator_H2P.load_state_dict(torch.load(os.path.join(checkpoint_path, f'generator_H2P_epoch{epoch_to_load}.pth')))
 generator_H2P.eval()
 
