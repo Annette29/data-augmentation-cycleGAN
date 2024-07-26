@@ -554,8 +554,6 @@ def plot_random_pairs_H2P(real_dir, mask_dir, fake_dir, num_pairs=num_pairs, suf
 def main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, limit_samples, num_images=num_pairs, save_dir=save_dir):
     with TemporaryDirectory() as temp_dir_H2P, TemporaryDirectory() as temp_dir_P2H:
         generator_H2P, generator_P2H = load_generators(generator_H2P, generator_P2H, checkpoint_path, num_epochs, device)
-        num_healthy_samples_test = len(test_loader_healthy.dataset)
-        test_loader_pathological = limit_samples(test_loader_pathological, num_healthy_samples_test)
         # Generate and save fake images
         generate_fake_images(generator_H2P, test_loader_healthy, temp_dir_H2P)
         generate_fake_images(generator_P2H, test_loader_pathological, temp_dir_P2H)
