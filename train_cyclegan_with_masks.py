@@ -188,6 +188,8 @@ lambda_identity = 10.0
 lambda_abnormality = 10.0
 sample_interval = 250  # Adjusted for less frequent loss calculation
 save_interval = 200  # Save model states every 200 epochs
+checkpoint_path = '/store/model checkpoints here/'
+os.makedirs(checkpoint_path, exist_ok=True)
 clip_value = 1.5  # Clipping value to prevent exploding gradients
 
 # Early stopping parameters
