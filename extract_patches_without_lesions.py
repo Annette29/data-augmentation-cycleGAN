@@ -49,7 +49,7 @@ def extract_patches(slide_path, output_dir, patch_size=1024, step_size=1024, int
     return basename, patch_count
 
 # Function to process all SVS files in a folder
-def process_folder(folder_path, output_dir):
+def process_svs_files(folder_path, output_dir):
     total_images_processed = 0
     total_patches_extracted = 0
 
@@ -63,7 +63,3 @@ def process_folder(folder_path, output_dir):
         total_patches_extracted += patches_extracted
 
         print(f"Processed SVS file {idx + 1}/{total_svs_files}: {basename}. Extracted {patches_extracted} patches.")
-
-    print(f"Total images processed: {total_images_processed}")
-    print(f"Total patches extracted: {total_patches_extracted}")
-
