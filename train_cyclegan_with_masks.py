@@ -19,6 +19,44 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 from model_architectures import UNetResNet34, PatchGANDiscriminator, weights_init_normal, WassersteinLossGP, CombinedL1L2Loss, AbnormalityMaskLoss
 
+# Create dataloaders for the training, validation, and test datasets for images with and without lesions & binary masks for images with lesions
+# Define root directories
+base_dir = 'your/patches for svs images both with and without lesions/folder'
+mask_base_dir = '/your/binary mask patches/folder'
+
+# Without Lesions
+train_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Training Data')
+train_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Training Data')
+healthy_mask_filenames_train = [f for f in os.listdir(train_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
+train_loader_healthy = create_dataloaders(train_image_dir_healthy, train_mask_dir_healthy,
+                                           mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_train))
+
+
+val_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Validation Data')
+val_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Validation Data')
+healthy_mask_filenames_val = [f for f in os.listdir(val_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
+val_loader_healthy = create_dataloaders(val_image_dir_healthy, val_mask_dir_healthy,
+                                        mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_val),
+                                        shuffle=False, random_sampling=True)
+
+test_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Test Data')
+test_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Test Data')
+healthy_mask_filenames_test = [f for f in os.listdir(test_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
+test_loader_healthy = create_dataloaders(test_image_dir_healthy, test_mask_dir_healthy,
+                                         mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_test),
+                                         shuffle=False, random_sampling=True)
+
+# With Lesions
+train_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Training Data'),
+                                               os.path.join(mask_base_dir, 'Resized With Lesions/Training Data'),
+                                               mask_name_func=default_mask_name_func)
+val_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Validation Data'),
+                                             os.path.join(mask_base_dir, 'Resized With Lesions/Validation Data'),
+                                             mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
+test_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Test Data'),
+                                              os.path.join(mask_base_dir, 'Resized With Lesions/Test Data'),
+                                              mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
+
 # Initialize the 4 models for use - generator_H2P, generator_p2H, discriminator_H, and disciminator_P & the 4 loss functions to train them - WGAN-GP as the adversarial loss. identity loss, cycle consistency loss, and abnormality loss
 generator_H2P = UNetResNet34(in_channels=4, out_channels=3).to(device)  # Perform element-wise multiplication of RGB images with binary masks selected randomly, hence in_channels=4
 generator_P2H = UNetResNet34(in_channels=4, out_channels=3).to(device)  # Perform element-wise multiplication of RGB images with their corresponding binary masks, hence in_channels=4
