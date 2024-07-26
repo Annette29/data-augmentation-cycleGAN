@@ -7,7 +7,8 @@ from model_architectures import
 from train_cyclegan_with_masks import 
 from cyclegan_with_masks_evaluation import 
 from train_cyclegan_without_masks import 
-from augment_original_dataset import 
+from augment_original_dataset_with_masks import 
+from augment_original_dataset_without_masks import 
 from classification_task_with_masks import 
 from classification_task_without_masks import 
 
