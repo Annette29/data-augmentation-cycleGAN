@@ -1,6 +1,8 @@
-openslide-python
-rasterio
-shapely
-affine
-numpy
-matplotlib
+openslide-python==1.1.2
+rasterio==1.2.10
+shapely==1.8.0
+affine==2.3.0
+pillow==9.0.1
+numpy==1.21.4
+opencv-python-headless==4.5.4.60
+matplotlib==3.4.3
