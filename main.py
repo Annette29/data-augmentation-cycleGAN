@@ -1,13 +1,15 @@
 import os
-from generate_masks import process_files
+from generate_binary_masks import process_files
 from extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
 from extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
 from load_training_dataset import
 from model_architectures import
-from train_cyclegan import 
-from cyclegan_evaluation import 
+from train_cyclegan_with_masks import 
+from cyclegan_with_masks_evaluation import 
+from train_cyclegan_without_masks import 
 from augment_original_dataset import 
-from classification_task import 
+from classification_task_with_masks import 
+from classification_task_without_masks import 
 
 # Define your paths here
 lesions_svs_dir = "/your/original svs images with lesions/folder"
@@ -48,15 +50,19 @@ print("Extracting patches for images without lesions...")
 total_images_processed, total_patches_extracted = process_folder_without_lesions(without_lesions_svs_dir, without_lesions_svs_patches_dir)
 print(f"\nProcessed {total_images_processed} SVS images without lesions and extracted a total of {total_patches_extracted} patches.")
 
-# Step 4: Train a CycleGAN model to synthesize pathology onto healthy images guided by binary masks
+# Step 4: Train a CycleGAN model to synthesize pathology onto healthy images with binary masks as conditional input
 
 # Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
 
-# Step 6: Add synthetic images to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
+# Step 6: Train a CycleGAN model to synthesize pathology onto healthy images without any conditional input
 
-# Step 7: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained with binary masks
+# Step 7: Add synthetic images (created from a CycleGAN trained with binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
 
-# Step 8: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
+# Step 8: Add synthetic images (created from a CycleGAN trained without binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
+
+# Step 9: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained with binary masks
+
+# Step 10: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
 
 
 
