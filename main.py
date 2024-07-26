@@ -57,48 +57,9 @@ total_images_processed, total_patches_extracted = process_folder_without_lesions
 print(f"\nProcessed {total_images_processed} SVS images without lesions and extracted a total of {total_patches_extracted} patches.")
 
 # Step 4: Train a CycleGAN model to synthesize pathology onto healthy images with binary masks as conditional input
-# Step 4.1: Load the training data 
 batch_size = 32
 num_workers = 10
-# Define root directories
-base_dir = 'your/patches for svs images both with and without lesions/folder'
-mask_base_dir = '/your/binary mask patches/folder'
 
-# Without Lesions
-train_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Training Data')
-train_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Training Data')
-healthy_mask_filenames_train = [f for f in os.listdir(train_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
-train_loader_healthy = create_dataloaders(train_image_dir_healthy, train_mask_dir_healthy,
-                                           mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_train))
-
-
-val_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Validation Data')
-val_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Validation Data')
-healthy_mask_filenames_val = [f for f in os.listdir(val_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
-val_loader_healthy = create_dataloaders(val_image_dir_healthy, val_mask_dir_healthy,
-                                        mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_val),
-                                        shuffle=False, random_sampling=True)
-
-test_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Test Data')
-test_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Test Data')
-healthy_mask_filenames_test = [f for f in os.listdir(test_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
-test_loader_healthy = create_dataloaders(test_image_dir_healthy, test_mask_dir_healthy,
-                                         mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_test),
-                                         shuffle=False, random_sampling=True)
-
-# With Lesions
-train_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Training Data'),
-                                               os.path.join(mask_base_dir, 'Resized With Lesions/Training Data'),
-                                               mask_name_func=default_mask_name_func)
-val_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Validation Data'),
-                                             os.path.join(mask_base_dir, 'Resized With Lesions/Validation Data'),
-                                             mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
-test_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Test Data'),
-                                              os.path.join(mask_base_dir, 'Resized With Lesions/Test Data'),
-                                              mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
-
-
-# Step 4.2: Train the CycleGAN
 (
     generator_H2P, generator_P2H, discriminator_H, discriminator_P,
     train_loader_healthy, train_loader_pathological, val_loader_healthy, val_loader_pathological,
