@@ -463,7 +463,7 @@ def generate_fake_images(generator, data_loader, output_dir):
                 fake_image.save(os.path.join(output_dir, fake_image_name))
 
 # Function to plot real, mask, and fake image pairs
-def plot_random_pairs(real_dir, mask_dir, fake_dir, num_pairs=num_pairs, suffix='_fake', save_dir=None, plot_name='plot.png'):
+def plot_random_pairs_P2H(real_dir, mask_dir, fake_dir, num_pairs=num_pairs, suffix='_fake', save_dir=None, plot_name='plot.png'):
     real_images = os.listdir(real_dir)
     mask_images = os.listdir(mask_dir)
     fake_images = os.listdir(fake_dir)
@@ -551,8 +551,9 @@ def plot_random_pairs_H2P(real_dir, mask_dir, fake_dir, num_pairs=num_pairs, suf
     plt.show()
 
 # Main function to handle both generators
-def main(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=num_pairs, save_dir=save_dir):
+def main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=num_pairs, save_dir=save_dir):
     with TemporaryDirectory() as temp_dir_H2P, TemporaryDirectory() as temp_dir_P2H:
+        generator_H2P, generator_P2H = load_generators(generator_H2P, generator_P2H, checkpoint_path, num_epochs, device)
         # Generate and save fake images
         generate_fake_images(generator_H2P, test_loader_healthy, temp_dir_H2P)
         generate_fake_images(generator_P2H, test_loader_pathological, temp_dir_P2H)
@@ -561,6 +562,6 @@ def main(generator_H2P, generator_P2H, test_loader_healthy, test_loader_patholog
         plot_random_pairs_H2P(without_lesions_svs_patches_dir, resized_mask_patches_dir, temp_dir_H2P, num_pairs=num_images, save_dir=save_dir)
         
         # Plot random pairs for P2H
-        plot_random_pairs(resized_lesions_svs_patches_dir, resized_mask_patches_dir, temp_dir_P2H, num_pairs=num_images, save_dir=save_dir)
+        plot_random_pairs_P2H(resized_lesions_svs_patches_dir, resized_mask_patches_dir, temp_dir_P2H, num_pairs=num_images, save_dir=save_dir)
 
 
