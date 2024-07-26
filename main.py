@@ -87,6 +87,10 @@ test_loader_pathological = limit_samples(test_loader_pathological, num_healthy_s
 main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=5, save_dir=plot_dir)
 
 # Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
+(
+    generator_H2P, test_loader_healthy, test_loader_pathological
+) = initialize_components(device)
+
 avg_iou_healthy, avg_ssim_healthy = evaluate_model(generator_H2P, test_loader_healthy, device)
 print(f'Average IoU (Healthy): {avg_iou_healthy}')
 print(f'Average SSIM (Healthy): {avg_ssim_healthy}')
