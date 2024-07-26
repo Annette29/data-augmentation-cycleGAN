@@ -130,6 +130,8 @@ def validate(generator_H2P, generator_P2H, val_loader_healthy, val_loader_pathol
     generator_P2H.train()
 
     return avg_loss_id_A, avg_loss_id_B, avg_loss_cycle_ABA, avg_loss_cycle_BAB, avg_loss_abnormality
+    
+
 
 # Define constants and hyperparameters
 epoch_counter = 0
