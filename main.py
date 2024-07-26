@@ -59,6 +59,8 @@ print(f"\nProcessed {total_images_processed} SVS images without lesions and extr
 
 # Step 4: Train a CycleGAN model to synthesize pathology onto healthy images with binary masks as conditional input
 # Step 4.1: Load the training data 
+batch_size = 32
+num_workers = 10
 # Define root directories
 base_dir = 'your/patches for svs images both with and without lesions/folder'
 mask_base_dir = '/your/binary mask patches/folder'
@@ -97,7 +99,7 @@ test_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized Wi
                                               mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
 
 
-# Step 4.3: 
+# Step 4.2: 
 
 # Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
 
