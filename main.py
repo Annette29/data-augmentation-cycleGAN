@@ -1,12 +1,15 @@
 import os
 from generate_masks import process_files
 from extract_patches import process_svs_files, resize_images_cv
+from extract_patches_without_lesions import process_folder as process_folder_without_lesions
 
 # Define your paths here
 lesions_svs_dir = "/your/original svs images with lesions/folder"
+without_lesions_svs_dir = "/your/original svs images without lesions/folder"
 geojson_dir = "/your/geojson data/folder"
-mask_dir = "/store binary masks here/"
+mask_dir = "/store binary masks for svs images with lesions here/"
 lesions_svs_patches_dir = "/store patches for svs images with lesions here/"
+without_lesions_svs_patches_dir = "/store patches for svs images without lesions here/"
 mask_patches_dir = "/store binary mask patches here/"
 resized_lesions_svs_patches_dir = "/store 1024*1024 patches for svs images with lesions here/"
 resized_mask_patches_dir = "/store 1024*1024 binary mask patches here/"
@@ -17,7 +20,7 @@ os.makedirs(mask_patches_dir, exist_ok=True)
 os.makedirs(resized_lesions_svs_patches_dir, exist_ok=True)
 os.makedirs(resized_mask_patches_dir, exist_ok=True)
 
-# Step 1: Create TIFF binary masks
+# Step 1: Create TIFF binary masks for images with lesions
 print("Creating TIFF binary masks for images with lesions...")
 masks_info = process_files(lesions_svs_dir, geojson_dir, mask_dir)
 
@@ -35,6 +38,9 @@ print(f"Number of binary mask patches processed: {processed_count}")
 print(f"Number of binary mask patches skipped due to errors: {skipped_count}")
 
 # Step 3: Extract patches from class: without lesions
+print("Extracting patches for images without lesions...")
+total_images_processed, total_patches_extracted = process_folder_without_lesions(without_lesions_svs_dir, without_lesions_svs_patches_dir)
+print(f"\nProcessed {total_images_processed} SVS images without lesions and extracted a total of {total_patches_extracted} patches.")
 
 
 
