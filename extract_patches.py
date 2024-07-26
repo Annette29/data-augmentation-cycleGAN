@@ -3,7 +3,7 @@ import json
 import numpy as np
 from PIL import Image
 import openslide
-import shutil
+import cv2
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -80,3 +80,23 @@ def process_svs_files(svs_dir, mask_dir, geojson_dir, svs_patches_dir, mask_patc
             print(f"Processed SVS file {processed_svs_files}/{total_svs_files}: {base_name}. Extracted {len(patches)} patches.")
 
     return processed_svs_files, total_patches
+
+def resize_images_cv(input_dir, output_dir, target_size=(1024, 1024)):
+    processed_count = 0  # Initialize the counter
+    skipped_count = 0  # Counter for skipped images due to errors
+    for filename in os.listdir(input_dir):
+        if filename.endswith('.png'):
+            try:
+                image_path = os.path.join(input_dir, filename)
+                output_path = os.path.join(output_dir, filename)
+                image = cv2.imread(image_path)
+                resized_image = cv2.resize(image, target_size, interpolation=cv2.INTER_CUBIC)
+                cv2.imwrite(output_path, resized_image)
+                processed_count += 1  # Increment the counter
+            except Exception as e:
+                print(f"Error processing {filename}: {str(e)}")
+                skipped_count += 1  # Increment the skipped counter
+    
+    print(f"Number of images processed: {processed_count}")
+    print(f"Number of images skipped due to errors: {skipped_count}")
+    
