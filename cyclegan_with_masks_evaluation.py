@@ -8,6 +8,10 @@ import torch
 from torchvision import transforms
 from PIL import Image
 
+(
+    generator_H2P, test_loader_healthy, test_loader_pathological
+) = initialize_components(device)
+
 # Load previously-saved model checkpoint
 checkpoint_path = '/your/model checkpoints/folder'
 epoch_to_load = #latest_model_checkpoint_saved
