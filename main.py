@@ -48,6 +48,15 @@ print("Extracting patches for images without lesions...")
 total_images_processed, total_patches_extracted = process_folder_without_lesions(without_lesions_svs_dir, without_lesions_svs_patches_dir)
 print(f"\nProcessed {total_images_processed} SVS images without lesions and extracted a total of {total_patches_extracted} patches.")
 
+# Step 4: Train a CycleGAN model to synthesize pathology onto healthy images guided by binary masks
+
+# Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
+
+# Step 6: Add synthetic images to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
+
+# Step 7: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created using binary masks
+
+# Step 8: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created without binary masks
 
 
 
