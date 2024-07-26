@@ -51,7 +51,7 @@ class OriginalDataset(Dataset):
             return None, None, image_name
 
 # Create dataloaders function
-def create_dataloaders(image_dir, mask_dir, batch_size=8, num_workers=10, shuffle=True, pin_memory=True, mask_name_func=None, healthy_mask_filenames=None, random_sampling=False):
+def create_dataloaders(image_dir, mask_dir, batch_size=batch_size, num_workers=num_workers, shuffle=True, pin_memory=True, mask_name_func=None, healthy_mask_filenames=None, random_sampling=False):
     if mask_name_func is None:
         mask_name_func = default_mask_name_func  # Default to using default_mask_name_func
 
