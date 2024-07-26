@@ -1,12 +1,11 @@
 import os
 import torch 
-device = torch.device("cuda" if torch.cuda.is_available() else "CPU")
 
 from generate_binary_masks import process_files
 from extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
 from extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
 from preprocess_training_data import create_dataloaders
-from train_cyclegan_with_masks import 
+from train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks
 from cyclegan_with_masks_evaluation import 
 from train_cyclegan_without_masks import 
 from augment_original_dataset_with_masks import 
@@ -99,7 +98,27 @@ test_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized Wi
                                               mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
 
 
-# Step 4.2: 
+# Step 4.2: Train the CycleGAN
+(
+    generator_H2P, generator_P2H, discriminator_H, discriminator_P,
+    train_loader_healthy, train_loader_pathological, val_loader_healthy, val_loader_pathological,
+    optimizer_G, optimizer_D_H, optimizer_D_P,
+    scheduler_G, scheduler_D_H, scheduler_D_P,
+    criterion_identity, criterion_cycle, criterion_abnormality,
+    wgan_gp_loss
+) = initialize_components(device)
+
+train_cyclegan_with_masks(
+    generator_H2P, generator_P2H, discriminator_H, discriminator_P,
+    train_loader_healthy, train_loader_pathological, val_loader_healthy, val_loader_pathological,
+    optimizer_G, optimizer_D_H, optimizer_D_P,
+    scheduler_G, scheduler_D_H, scheduler_D_P,
+    criterion_identity, criterion_cycle, criterion_abnormality,
+    wgan_gp_loss, clip_value, lambda_cycle, lambda_identity, lambda_abnormality,
+    smooth_real_label, smooth_fake_label,
+    checkpoint_path, save_interval, sample_interval, num_epochs, early_stopping_patience,
+    device
+)
 
 # Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
 
