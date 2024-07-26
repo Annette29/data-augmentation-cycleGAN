@@ -37,7 +37,7 @@ To use our project, please follow these steps:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Annette29/data_augmentation_using_cycleGAN.git
+   git clone https://github.com/Annette29/data-augmentation-cycleGAN.git
    ```
 
 2. **Navigate to the project directory:**
