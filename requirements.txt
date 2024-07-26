@@ -1,0 +1,6 @@
+openslide-python
+rasterio
+shapely
+affine
+numpy
+matplotlib
