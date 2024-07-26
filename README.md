@@ -1,6 +1,7 @@
-# BRACS Dataset Processing
+## CycleGAN-Driven Data Augmentation for Improved Neural Network Disease Detection 
 
-Please find and download the BRACS Dataset from here: https://www.bracs.icar.cnr.it/
+
+Please find and download the BRACS Dataset from here: https://www.bracs.icar.cnr.it/ 
 
 After downloading, please open the SVS files and their corresponding .qpdata annotations using the QuPath software (https://qupath.github.io/)
 
@@ -12,5 +13,4 @@ This repository contains scripts for:
 
 1. Generating binary masks from GeoJSON annotations.
 
-## Directory Structure
 
