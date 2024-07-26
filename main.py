@@ -1,5 +1,7 @@
 import os
 import torch 
+device = torch.device("cuda" if torch.cuda.is_available() else "CPU")
+
 from generate_binary_masks import process_files
 from extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
 from extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
