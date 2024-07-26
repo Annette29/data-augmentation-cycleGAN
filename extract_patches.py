@@ -97,6 +97,4 @@ def resize_images_cv(input_dir, output_dir, target_size=(1024, 1024)):
                 print(f"Error processing {filename}: {str(e)}")
                 skipped_count += 1  # Increment the skipped counter
     
-    print(f"Number of images processed: {processed_count}")
-    print(f"Number of images skipped due to errors: {skipped_count}")
     
