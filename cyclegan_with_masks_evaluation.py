@@ -1,4 +1,5 @@
 from model_with_masks_architectures import UNetResNet34
+from train_cyclegan_with_masks import initialize_components
 
 import os
 import numpy as np
@@ -6,6 +7,12 @@ from skimage.metrics import structural_similarity as ssim
 import torch
 from torchvision import transforms
 from PIL import Image
+
+# Load previously-saved model checkpoint
+checkpoint_path = '/your/model checkpoints/folder'
+epoch_to_load = #latest_model_checkpoint_saved
+generator_H2P.load_state_dict(torch.load(os.path.join(checkpoint_path, f'generator_H2P_epoch{epoch_to_load}.pth')))
+generator_H2P.eval()
 
 # Compute SSIM (Structural Similarity Index Measure)
 def compute_ssim(image1, image2):
