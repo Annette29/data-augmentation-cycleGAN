@@ -4,7 +4,7 @@ import torch
 from generate_binary_masks import process_files
 from extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
 from extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
-from train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks
+from train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks, visualize_activations, main_plotting_function
 from cyclegan_with_masks_evaluation import 
 from train_cyclegan_without_masks import 
 from augment_original_dataset_with_masks import 
@@ -50,7 +50,7 @@ processed_count, skipped_count = resize_images_cv(mask_patches_dir, resized_mask
 print(f"Number of binary mask patches processed: {processed_count}")
 print(f"Number of binary mask patches skipped due to errors: {skipped_count}")
 
-# Step 3: Extract patches from class: without lesions
+# Step 3: Extract 1024*1024 patches from class: without lesions
 print("Extracting patches for images without lesions...")
 total_images_processed, total_patches_extracted = process_folder_without_lesions(without_lesions_svs_dir, without_lesions_svs_patches_dir)
 print(f"\nProcessed {total_images_processed} SVS images without lesions and extracted a total of {total_patches_extracted} patches.")
@@ -76,6 +76,13 @@ train_cyclegan_with_masks(
     checkpoint_path, save_interval, sample_interval, num_epochs, early_stopping_patience,
     device
 )
+
+# Visualize activations to confirm if the generators are utilizing the binary masks 
+visualize_activations(generator_H2P, test_loader_healthy, device)
+visualize_activations(generator_P2H, test_loader_pathological, device)
+
+# Plot random pairs of images for visual inspection 
+main_plotting_function()
 
 # Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
 
