@@ -5,7 +5,7 @@ from generate_binary_masks import process_files
 from extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
 from extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
 from train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks, visualize_activations, main_plotting_function
-from cyclegan_with_masks_evaluation import 
+from cyclegan_with_masks_evaluation import evaluate_model
 from train_cyclegan_without_masks import 
 from augment_original_dataset_with_masks import 
 from augment_original_dataset_without_masks import 
@@ -85,6 +85,13 @@ visualize_activations(generator_P2H, test_loader_pathological, device)
 main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=5, save_dir=plot_dir)
 
 # Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
+avg_iou_healthy, avg_ssim_healthy = evaluate_model(generator_H2P, test_loader_healthy, device)
+print(f'Average IoU (Healthy): {avg_iou_healthy}')
+print(f'Average SSIM (Healthy): {avg_ssim_healthy}')
+
+avg_iou_pathological, avg_ssim_pathological = evaluate_model(generator_H2P, test_loader_pathological, device)
+print(f'Average IoU (Pathological): {avg_iou_pathological}')
+print(f'Average SSIM (Pathological): {avg_ssim_pathological}')
 
 # Step 6: Train a CycleGAN model to synthesize pathology onto healthy images without any conditional input
 
