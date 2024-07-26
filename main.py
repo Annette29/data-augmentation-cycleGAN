@@ -21,6 +21,7 @@ masks_info = process_files(svs_dir, geojson_dir, mask_dir)
 print("Extracting patches from images with lesions...")
 processed_svs_files, total_patches = process_svs_files(svs_dir, mask_dir, geojson_dir, svs_patches_dir, mask_patches_dir, processed_dir)
 print(f"\nProcessed {processed_svs_files} SVS files and extracted a total of {total_patches} patches.")
+resize_images_cv(input_dir, output_dir)
 
 # Step 3: Extract patches from class: without lesions
 
