@@ -58,7 +58,7 @@ print(f"\nProcessed {total_images_processed} SVS images without lesions and extr
 # Step 4: Train a CycleGAN model to synthesize pathology onto healthy images with binary masks as conditional input
 (
     generator_H2P, generator_P2H, discriminator_H, discriminator_P,
-    train_loader_healthy, train_loader_pathological, val_loader_healthy, val_loader_pathological,
+    train_loader_healthy, train_loader_pathological, val_loader_healthy, val_loader_pathological, test_loader_healthy, test_loader_pathological, 
     optimizer_G, optimizer_D_H, optimizer_D_P,
     scheduler_G, scheduler_D_H, scheduler_D_P,
     criterion_identity, criterion_cycle, criterion_abnormality,
@@ -82,7 +82,7 @@ visualize_activations(generator_H2P, test_loader_healthy, device)
 visualize_activations(generator_P2H, test_loader_pathological, device)
 
 # Plot random pairs of images for visual inspection 
-main_plotting_function()
+main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=5, save_dir=save_dir)
 
 # Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
 
