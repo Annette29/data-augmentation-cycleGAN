@@ -9,7 +9,7 @@ from torchvision import transforms
 from PIL import Image
 
 (
-    generator_H2P, test_loader_healthy, test_loader_pathological
+    generator_H2P
 ) = initialize_components(device)
 
 # Load previously-saved model checkpoint
