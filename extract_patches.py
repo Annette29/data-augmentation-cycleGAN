@@ -80,26 +80,3 @@ def process_svs_files(svs_dir, mask_dir, geojson_dir, svs_patches_dir, mask_patc
             print(f"Processed SVS file {processed_svs_files}/{total_svs_files}: {base_name}. Extracted {len(patches)} patches.")
 
     return processed_svs_files, total_patches
-
-def move_processed_files(svs_dir, processed_dir, svs_patches_dir):
-    svs_patch_basenames = set()
-    for file in os.listdir(svs_patches_dir):
-        if file.endswith('.png') and 'mask' not in file:
-            base_name = file.split('_x=')[0]
-            svs_patch_basenames.add(base_name)
-
-    moved_files_count = 0
-    remaining_files_count = 0
-
-    for svs_file in os.listdir(svs_dir):
-        if svs_file.endswith('.svs'):
-            base_name = os.path.splitext(svs_file)[0]
-
-            if base_name in svs_patch_basenames:
-                print(f"Patches extracted for {base_name}. Moving to processed directory...")
-                shutil.move(os.path.join(svs_dir, svs_file), os.path.join(processed_dir, svs_file))
-                moved_files_count += 1
-            else:
-                remaining_files_count += 1
-
-    return moved_files_count, remaining_files_count
