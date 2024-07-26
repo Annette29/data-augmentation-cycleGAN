@@ -15,161 +15,170 @@ import gc
 import itertools
 from tempfile import TemporaryDirectory
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cuda" if torch.cuda.is_available() else "CPU"
 
+from preprocess_training_data import create_dataloaders
 from model_architectures import UNetResNet34, PatchGANDiscriminator, weights_init_normal, WassersteinLossGP, CombinedL1L2Loss, AbnormalityMaskLoss
 
-# Create dataloaders for the training, validation, and test datasets for images with and without lesions & binary masks for images with lesions
-# Define root directories
-base_dir = 'your/patches for svs images both with and without lesions/folder'
-mask_base_dir = '/your/binary mask patches/folder'
-
-# Without Lesions
-train_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Training Data')
-train_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Training Data')
-healthy_mask_filenames_train = [f for f in os.listdir(train_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
-train_loader_healthy = create_dataloaders(train_image_dir_healthy, train_mask_dir_healthy,
-                                           mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_train))
-
-
-val_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Validation Data')
-val_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Validation Data')
-healthy_mask_filenames_val = [f for f in os.listdir(val_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
-val_loader_healthy = create_dataloaders(val_image_dir_healthy, val_mask_dir_healthy,
-                                        mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_val),
-                                        shuffle=False, random_sampling=True)
-
-test_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Test Data')
-test_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Test Data')
-healthy_mask_filenames_test = [f for f in os.listdir(test_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
-test_loader_healthy = create_dataloaders(test_image_dir_healthy, test_mask_dir_healthy,
-                                         mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_test),
-                                         shuffle=False, random_sampling=True)
-
-# With Lesions
-train_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Training Data'),
-                                               os.path.join(mask_base_dir, 'Resized With Lesions/Training Data'),
-                                               mask_name_func=default_mask_name_func)
-val_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Validation Data'),
-                                             os.path.join(mask_base_dir, 'Resized With Lesions/Validation Data'),
-                                             mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
-test_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Test Data'),
-                                              os.path.join(mask_base_dir, 'Resized With Lesions/Test Data'),
-                                              mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
-
-# Initialize the 4 models for use - generator_H2P, generator_p2H, discriminator_H, and disciminator_P & the 4 loss functions to train them - WGAN-GP as the adversarial loss. identity loss, cycle consistency loss, and abnormality loss
-generator_H2P = UNetResNet34(in_channels=4, out_channels=3).to(device)  # Perform element-wise multiplication of RGB images with binary masks selected randomly, hence in_channels=4
-generator_P2H = UNetResNet34(in_channels=4, out_channels=3).to(device)  # Perform element-wise multiplication of RGB images with their corresponding binary masks, hence in_channels=4
-discriminator_H = PatchGANDiscriminator(in_channels=3).to(device)
-discriminator_P = PatchGANDiscriminator(in_channels=3).to(device)
-
-generator_H2P.apply(weights_init_normal)
-generator_P2H.apply(weights_init_normal)
-discriminator_H.apply(weights_init_normal)
-discriminator_P.apply(weights_init_normal)
-
-wgan_gp_loss = WassersteinLossGP(lambda_gp=10)
-smooth_real_label = 0.9
-smooth_fake_label = 0.1
-criterion_cycle = CombinedL1L2Loss(lambda_l1=1.0, lambda_l2=1.0).to(device)
-criterion_identity = CombinedL1L2Loss(lambda_l1=1.0, lambda_l2=1.0).to(device)
-criterion_abnormality = AbnormalityMaskLoss(lambda_l1=1.0, lambda_l2=1.0).to(device)
-
-# Initialize optimizers with reducing learning rate and weight decay/L2 regularization
-optimizer_G = torch.optim.Adam(itertools.chain(generator_H2P.parameters(), generator_P2H.parameters()), lr=0.0002, betas=(0.5, 0.999), weight_decay=0.001)
-optimizer_D_H = torch.optim.Adam(discriminator_H.parameters(), lr=0.0002, betas=(0.5, 0.999), weight_decay=0.001)
-optimizer_D_P = torch.optim.Adam(discriminator_P.parameters(), lr=0.0002, betas=(0.5, 0.999), weight_decay=0.001)
-
-# Wrap models with DataParallel for data parallelism (allows you to split the batch of data across multiple GPUs and compute the results in parallel)
-generator_H2P = torch.nn.DataParallel(generator_H2P)
-generator_P2H = torch.nn.DataParallel(generator_P2H)
-discriminator_H = torch.nn.DataParallel(discriminator_H)
-discriminator_P = torch.nn.DataParallel(discriminator_P)
-
-# Define the validaton function
-def validate(generator_H2P, generator_P2H, val_loader_healthy, val_loader_pathological, criterion_cycle, criterion_identity, criterion_abnormality):
-    generator_H2P.eval()
-    generator_P2H.eval()
-
-    total_loss_id_A = 0.0
-    total_loss_id_B = 0.0
-    total_loss_cycle_ABA = 0.0
-    total_loss_cycle_BAB = 0.0
-    total_loss_abnormality = 0.0
-    total_samples = 0
-
-    # Initialize iterators
-    pathological_iter = iter(val_loader_pathological)
-    healthy_iter = iter(val_loader_healthy)
-
-    with torch.no_grad():
-        for _ in range(max(len(val_loader_pathological), len(val_loader_healthy))):
-            try:
-                # Fetch pathological data
-                real_B, mask_B, image_name_B = next(pathological_iter)
-            except StopIteration:
-                # Reset iterator if StopIteration occurs
-                pathological_iter = iter(val_loader_pathological)
-                real_B, mask_B, image_name_B = next(pathological_iter)
-
-            real_B = real_B.to(device)
-            mask_B = mask_B.to(device)
-
-            try:
-                # Fetch healthy data
-                real_A, mask_A, image_name_A = next(healthy_iter)
-            except StopIteration:
-                # Reset iterator if StopIteration occurs
-                healthy_iter = iter(val_loader_healthy)
-                real_A, mask_A, image_name_A = next(healthy_iter)
-
-            real_A = real_A.to(device)
-            mask_A = mask_A.to(device)
-
-            # Ensure consistent batch sizes
-            if real_A.size(0) != real_B.size(0):
-                continue
-
-            # 1. Identity Loss
-            empty_mask = torch.zeros_like(mask_A)
-            loss_id_A = criterion_identity(generator_P2H(real_A, empty_mask), real_A)
-            loss_id_B = criterion_identity(generator_H2P(real_B, empty_mask), real_B)
-
-            # 2. Cycle Consistency Loss
-            fake_B = generator_H2P(real_A.detach(), mask_A.detach()).clone()
-            recov_A = generator_P2H(fake_B, mask_A).clone()
-            loss_cycle_ABA = criterion_cycle(recov_A, real_A)
-
-            fake_A = generator_P2H(real_B.detach(), mask_B.detach()).clone()
-            recov_B = generator_H2P(fake_A, mask_B).clone()
-            loss_cycle_BAB = criterion_cycle(recov_B, real_B.detach())
-
-            # 3. Abnormality Mask Loss (for PHP cycle only)
-            loss_abnormality = criterion_abnormality(fake_A, real_B, mask_B)
-
-            # Accumulate total losses
-            batch_size_A = real_A.size(0)
-            batch_size_B = real_B.size(0)
-            total_loss_id_A += loss_id_A.item() * batch_size_A
-            total_loss_id_B += loss_id_B.item() * batch_size_B
-            total_loss_cycle_ABA += loss_cycle_ABA.item() * batch_size_A
-            total_loss_cycle_BAB += loss_cycle_BAB.item() * batch_size_B
-            total_loss_abnormality += loss_abnormality.item() * batch_size_A
-            total_samples += batch_size_A + batch_size_B  # Counting batches processed
-
-    # Calculate average losses
-    avg_loss_id_A = total_loss_id_A / total_samples
-    avg_loss_id_B = total_loss_id_B / total_samples
-    avg_loss_cycle_ABA = total_loss_cycle_ABA / total_samples
-    avg_loss_cycle_BAB = total_loss_cycle_BAB / total_samples
-    avg_loss_abnormality = total_loss_abnormality / total_samples
-
-    generator_H2P.train()
-    generator_P2H.train()
-
-    return avg_loss_id_A, avg_loss_id_B, avg_loss_cycle_ABA, avg_loss_cycle_BAB, avg_loss_abnormality
+def initialize_components(device):
+    # Create dataloaders for the training, validation, and test datasets for images with and without lesions & binary masks for images with lesions
+    # Define root directories
+    base_dir = 'your/patches for svs images both with and without lesions/folder'
+    mask_base_dir = '/your/binary mask patches/folder'
     
-
+    # Without Lesions
+    train_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Training Data')
+    train_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Training Data')
+    healthy_mask_filenames_train = [f for f in os.listdir(train_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
+    train_loader_healthy = create_dataloaders(train_image_dir_healthy, train_mask_dir_healthy,
+                                               mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_train))
+    
+    
+    val_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Validation Data')
+    val_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Validation Data')
+    healthy_mask_filenames_val = [f for f in os.listdir(val_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
+    val_loader_healthy = create_dataloaders(val_image_dir_healthy, val_mask_dir_healthy,
+                                            mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_val),
+                                            shuffle=False, random_sampling=True)
+    
+    test_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Test Data')
+    test_mask_dir_healthy = os.path.join(mask_base_dir, 'Resized With Lesions/Test Data')
+    healthy_mask_filenames_test = [f for f in os.listdir(test_mask_dir_healthy) if f.endswith('.png') or f.endswith('.jpg')]
+    test_loader_healthy = create_dataloaders(test_image_dir_healthy, test_mask_dir_healthy,
+                                             mask_name_func=lambda image_name: random_pathological_mask_name_func(image_name, healthy_mask_filenames_test),
+                                             shuffle=False, random_sampling=True)
+    
+    # With Lesions
+    train_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Training Data'),
+                                                   os.path.join(mask_base_dir, 'Resized With Lesions/Training Data'),
+                                                   mask_name_func=default_mask_name_func)
+    val_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Validation Data'),
+                                                 os.path.join(mask_base_dir, 'Resized With Lesions/Validation Data'),
+                                                 mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
+    test_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Test Data'),
+                                                  os.path.join(mask_base_dir, 'Resized With Lesions/Test Data'),
+                                                  mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
+    
+    # Initialize the 4 models for use - generator_H2P, generator_p2H, discriminator_H, and disciminator_P & the 4 loss functions to train them - WGAN-GP as the adversarial loss. identity loss, cycle consistency loss, and abnormality loss
+    generator_H2P = UNetResNet34(in_channels=4, out_channels=3).to(device)  # Perform element-wise multiplication of RGB images with binary masks selected randomly, hence in_channels=4
+    generator_P2H = UNetResNet34(in_channels=4, out_channels=3).to(device)  # Perform element-wise multiplication of RGB images with their corresponding binary masks, hence in_channels=4
+    discriminator_H = PatchGANDiscriminator(in_channels=3).to(device)
+    discriminator_P = PatchGANDiscriminator(in_channels=3).to(device)
+    
+    generator_H2P.apply(weights_init_normal)
+    generator_P2H.apply(weights_init_normal)
+    discriminator_H.apply(weights_init_normal)
+    discriminator_P.apply(weights_init_normal)
+    
+    wgan_gp_loss = WassersteinLossGP(lambda_gp=10)
+    smooth_real_label = 0.9
+    smooth_fake_label = 0.1
+    criterion_cycle = CombinedL1L2Loss(lambda_l1=1.0, lambda_l2=1.0).to(device)
+    criterion_identity = CombinedL1L2Loss(lambda_l1=1.0, lambda_l2=1.0).to(device)
+    criterion_abnormality = AbnormalityMaskLoss(lambda_l1=1.0, lambda_l2=1.0).to(device)
+    
+    # Initialize optimizers with reducing learning rate and weight decay/L2 regularization
+    optimizer_G = torch.optim.Adam(itertools.chain(generator_H2P.parameters(), generator_P2H.parameters()), lr=0.0002, betas=(0.5, 0.999), weight_decay=0.001)
+    optimizer_D_H = torch.optim.Adam(discriminator_H.parameters(), lr=0.0002, betas=(0.5, 0.999), weight_decay=0.001)
+    optimizer_D_P = torch.optim.Adam(discriminator_P.parameters(), lr=0.0002, betas=(0.5, 0.999), weight_decay=0.001)
+    
+    # Wrap models with DataParallel for data parallelism (allows you to split the batch of data across multiple GPUs and compute the results in parallel)
+    generator_H2P = torch.nn.DataParallel(generator_H2P)
+    generator_P2H = torch.nn.DataParallel(generator_P2H)
+    discriminator_H = torch.nn.DataParallel(discriminator_H)
+    discriminator_P = torch.nn.DataParallel(discriminator_P)
+    
+    # Define the validaton function
+    def validate(generator_H2P, generator_P2H, val_loader_healthy, val_loader_pathological, criterion_cycle, criterion_identity, criterion_abnormality):
+        generator_H2P.eval()
+        generator_P2H.eval()
+    
+        total_loss_id_A = 0.0
+        total_loss_id_B = 0.0
+        total_loss_cycle_ABA = 0.0
+        total_loss_cycle_BAB = 0.0
+        total_loss_abnormality = 0.0
+        total_samples = 0
+    
+        # Initialize iterators
+        pathological_iter = iter(val_loader_pathological)
+        healthy_iter = iter(val_loader_healthy)
+    
+        with torch.no_grad():
+            for _ in range(max(len(val_loader_pathological), len(val_loader_healthy))):
+                try:
+                    # Fetch pathological data
+                    real_B, mask_B, image_name_B = next(pathological_iter)
+                except StopIteration:
+                    # Reset iterator if StopIteration occurs
+                    pathological_iter = iter(val_loader_pathological)
+                    real_B, mask_B, image_name_B = next(pathological_iter)
+    
+                real_B = real_B.to(device)
+                mask_B = mask_B.to(device)
+    
+                try:
+                    # Fetch healthy data
+                    real_A, mask_A, image_name_A = next(healthy_iter)
+                except StopIteration:
+                    # Reset iterator if StopIteration occurs
+                    healthy_iter = iter(val_loader_healthy)
+                    real_A, mask_A, image_name_A = next(healthy_iter)
+    
+                real_A = real_A.to(device)
+                mask_A = mask_A.to(device)
+    
+                # Ensure consistent batch sizes
+                if real_A.size(0) != real_B.size(0):
+                    continue
+    
+                # 1. Identity Loss
+                empty_mask = torch.zeros_like(mask_A)
+                loss_id_A = criterion_identity(generator_P2H(real_A, empty_mask), real_A)
+                loss_id_B = criterion_identity(generator_H2P(real_B, empty_mask), real_B)
+    
+                # 2. Cycle Consistency Loss
+                fake_B = generator_H2P(real_A.detach(), mask_A.detach()).clone()
+                recov_A = generator_P2H(fake_B, mask_A).clone()
+                loss_cycle_ABA = criterion_cycle(recov_A, real_A)
+    
+                fake_A = generator_P2H(real_B.detach(), mask_B.detach()).clone()
+                recov_B = generator_H2P(fake_A, mask_B).clone()
+                loss_cycle_BAB = criterion_cycle(recov_B, real_B.detach())
+    
+                # 3. Abnormality Mask Loss (for PHP cycle only)
+                loss_abnormality = criterion_abnormality(fake_A, real_B, mask_B)
+    
+                # Accumulate total losses
+                batch_size_A = real_A.size(0)
+                batch_size_B = real_B.size(0)
+                total_loss_id_A += loss_id_A.item() * batch_size_A
+                total_loss_id_B += loss_id_B.item() * batch_size_B
+                total_loss_cycle_ABA += loss_cycle_ABA.item() * batch_size_A
+                total_loss_cycle_BAB += loss_cycle_BAB.item() * batch_size_B
+                total_loss_abnormality += loss_abnormality.item() * batch_size_A
+                total_samples += batch_size_A + batch_size_B  # Counting batches processed
+    
+        # Calculate average losses
+        avg_loss_id_A = total_loss_id_A / total_samples
+        avg_loss_id_B = total_loss_id_B / total_samples
+        avg_loss_cycle_ABA = total_loss_cycle_ABA / total_samples
+        avg_loss_cycle_BAB = total_loss_cycle_BAB / total_samples
+        avg_loss_abnormality = total_loss_abnormality / total_samples
+    
+        generator_H2P.train()
+        generator_P2H.train()
+    
+        return avg_loss_id_A, avg_loss_id_B, avg_loss_cycle_ABA, avg_loss_cycle_BAB, avg_loss_abnormality
+        
+    return(
+        generator_H2P, generator_P2H, discriminator_H, discriminator_P,
+        train_loader_healthy, train_loader_pathological, val_loader_healthy, val_loader_pathological,
+        optimizer_G, optimizer_D_H, optimizer_D_P,
+        scheduler_G, scheduler_D_H, scheduler_D_P,
+        criterion_identity, criterion_cycle, criterion_abnormality,
+        wgan_gp_loss
+    )
 
 # Define constants and hyperparameters
 epoch_counter = 0
