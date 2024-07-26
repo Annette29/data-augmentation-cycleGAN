@@ -565,3 +565,4 @@ def main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, te
         
         # Plot random pairs for P2H
         plot_random_pairs_P2H(resized_lesions_svs_patches_dir, resized_mask_patches_dir, temp_dir_P2H, num_pairs=num_images, save_dir=save_dir)
+        
