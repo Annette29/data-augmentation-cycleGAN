@@ -55,9 +55,6 @@ total_images_processed, total_patches_extracted = process_folder_without_lesions
 print(f"\nProcessed {total_images_processed} SVS images without lesions and extracted a total of {total_patches_extracted} patches.")
 
 # Step 4: Train a CycleGAN model to synthesize pathology onto healthy images with binary masks as conditional input
-batch_size = 32
-num_workers = 10
-
 (
     generator_H2P, generator_P2H, discriminator_H, discriminator_P,
     train_loader_healthy, train_loader_pathological, val_loader_healthy, val_loader_pathological,
