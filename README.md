@@ -24,8 +24,8 @@ This repository contains scripts to help you:
 6. Add synthetic images to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
 
 7. Train 3 sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained with binary masks
-
-8: Train 3 sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
+  
+8. Train 3 sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
 
 ---
 
