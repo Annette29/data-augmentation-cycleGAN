@@ -1,7 +1,7 @@
 import os
 from generate_masks import process_files
-from extract_patches import process_svs_files, resize_images_cv
-from extract_patches_without_lesions import process_folder as process_folder_without_lesions
+from extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
+from extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
 
 # Define your paths here
 lesions_svs_dir = "/your/original svs images with lesions/folder"
@@ -26,7 +26,7 @@ masks_info = process_files(lesions_svs_dir, geojson_dir, mask_dir)
 
 # Step 2: Extract patches from class: with lesions
 print("Extracting patches from images with lesions...")
-processed_svs_files, total_patches = process_svs_files(lesions_svs_dir, mask_dir, geojson_dir, lesions_svs_patches_dir, mask_patches_dir, processed_dir)
+processed_svs_files, total_patches = process_folder_with_lesions(lesions_svs_dir, mask_dir, geojson_dir, lesions_svs_patches_dir, mask_patches_dir, processed_dir)
 print(f"\nProcessed {processed_svs_files} SVS images with lesions and extracted a total of {total_patches} patches.")
 
 processed_count, skipped_count = resize_images_cv(lesions_svs_patches_dir, resized_lesions_svs_patches_dir)
