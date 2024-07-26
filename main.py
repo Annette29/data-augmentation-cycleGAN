@@ -22,7 +22,7 @@ without_lesions_svs_patches_dir = "/store patches for svs images without lesions
 mask_patches_dir = "/store binary mask patches here/"
 resized_lesions_svs_patches_dir = "/store 1024*1024 patches for svs images with lesions here/"
 resized_mask_patches_dir = "/store 1024*1024 binary mask patches here/"
-save_dir = "/store plots for real images vs binary masks vs synthetic images here/"
+plot_dir = "/store plots for real images vs binary masks vs synthetic images here/"
 
 # Ensure necessary directories exist
 os.makedirs(mask_dir, exist_ok=True)
@@ -31,7 +31,7 @@ os.makedirs(without_lesions_svs_patches_dir, exist_ok=True)
 os.makedirs(mask_patches_dir, exist_ok=True)
 os.makedirs(resized_lesions_svs_patches_dir, exist_ok=True)
 os.makedirs(resized_mask_patches_dir, exist_ok=True)
-os.makedirs(save_dir, exist_ok=True)
+os.makedirs(plot_dir, exist_ok=True)
 
 # Step 1: Create TIFF binary masks for images with lesions
 print("Creating TIFF binary masks for images with lesions...")
@@ -82,7 +82,7 @@ visualize_activations(generator_H2P, test_loader_healthy, device)
 visualize_activations(generator_P2H, test_loader_pathological, device)
 
 # Plot random pairs of images for visual inspection 
-main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=5, save_dir=save_dir)
+main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=5, save_dir=plot_dir)
 
 # Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
 
