@@ -11,6 +11,10 @@ Also, since each SVS image is too large to process at once, we have extracted pa
 
 This repository contains scripts for:
 
-1. Generating binary masks from GeoJSON annotations.
+1. Generating binary masks from SVS images guided by coordinates in the .geojson file
+
+2. Extracting 1024*1024 .jpg patches from SVS images + TIFF binary masks (class: with lesions) guided by coordinates in the .geojson file
+
+3. Extracting 1024*1024 .jpg patches from SVS images (class: without lesions) with randomness conditionally applied to avoid extracting too many patches
 
 
