@@ -22,6 +22,8 @@ from model_architectures import UNetResNet34, PatchGANDiscriminator, weights_ini
 
 def initialize_components(device):
     # Create dataloaders for the training, validation, and test datasets for images with and without lesions & binary masks for images with lesions
+    batch_size = 32
+    num_workers = 10
     # Define root directories
     base_dir = 'your/patches for svs images both with and without lesions/folder'
     mask_base_dir = '/your/binary mask patches/folder'
@@ -182,7 +184,7 @@ def initialize_components(device):
 
 # Define constants and hyperparameters
 epoch_counter = 0
-num_epochs = 1001 # Start by training for 1000 epochs and observe the resulting outputs 
+num_epochs = 1001 # Start by training for 1000 epochs and observe the resulting outputs - we are using a while loop during training hence the +1
 lambda_cycle = 10.0
 lambda_identity = 10.0
 lambda_abnormality = 10.0
@@ -375,3 +377,190 @@ def train_cyclegan_with_masks(
         print(f"Training stopped early due to no improvement in validation loss after {early_stopping_patience} epochs.")
     else:
         print("Training finished successfully.")
+
+# Function to load saved generator models
+def load_generators(generator_H2P, generator_P2H, checkpoint_path, num_epochs, device):
+    generator_H2P.load_state_dict(torch.load(os.path.join(checkpoint_path, f'generator_H2P_epoch{num_epochs - 1}.pth')))
+    generator_P2H.load_state_dict(torch.load(os.path.join(checkpoint_path, f'generator_P2H_epoch{num_epochs - 1}.pth')))
+    generator_H2P.eval()
+    generator_P2H.eval()
+    return generator_H2P, generator_P2H
+
+# Function to perform forward pass and visualize activations to confirm that the generators are utilizing the binary masks 
+def visualize_activations(generator, test_loader, device):
+    activations = []
+
+    def hook_fn(module, input, output):
+        activations.append(output)
+
+    hooks = []
+    for layer in [generator.encoder[0], generator.encoder[4], generator.encoder[5], generator.up1, generator.up2, generator.up3, generator.conv_final]:
+        hooks.append(layer.register_forward_hook(hook_fn))
+
+    num_images = 2
+
+    with torch.no_grad():
+        for i in range(num_images):
+            real_img, mask, image_name = next(iter(test_loader))
+            real_img, mask = real_img.to(device), mask.to(device)
+
+            # Generate synthetic image
+            fake_img = generator(real_img, mask)
+
+            # Visualize the captured activations
+            for j, activation in enumerate(activations):
+                plt.figure(figsize=(10, 5))
+                plt.title(f"Activation {j}")
+                activation = activation.cpu().numpy().squeeze()
+                if activation.ndim == 4:  # Check if activation is 4D
+                    activation = activation[0, :, :, :]  # Select a single channel
+                if activation.ndim == 3 and activation.shape[0] > 3:  # If more than 3 channels
+                    activation = activation[0:3]  # Select the first 3 channels
+                if activation.ndim == 3:
+                    activation = np.transpose(activation, (1, 2, 0))  # Convert to HWC format if it's 3D
+
+                plt.imshow(activation, cmap='viridis')
+                plt.colorbar()
+                plt.show()
+
+            # Clear activations for next sample
+            activations.clear()
+
+    # Remove hooks after visualization
+    for hook in hooks:
+        hook.remove()
+
+# Function to limit the number of samples in a DataLoader [useful only when plotting a random sample of synthetic images]
+def limit_samples(dataloader, num_samples):
+    indices = list(range(len(dataloader.dataset)))
+    limited_indices = indices[:num_samples]
+    limited_dataset = Subset(dataloader.dataset, limited_indices)
+    limited_dataloader = DataLoader(limited_dataset, batch_size=dataloader.batch_size, shuffle=False, num_workers=dataloader.num_workers, pin_memory=dataloader.pin_memory)
+    return limited_dataloader
+
+# Function to denormalize tensors
+def denormalize(tensor):
+    return tensor * 0.5 + 0.5
+
+# Function to generate fake images
+def generate_fake_images(generator, data_loader, output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+    generator.eval()
+    with torch.no_grad():
+        for batch_idx, (real_images, masks, image_names) in enumerate(data_loader):
+            real_images = real_images.to(device)
+            masks = masks.to(device)
+
+            # Generate fake images
+            fake_images = generator(real_images, masks)
+
+            # Save fake images
+            for idx in range(fake_images.size(0)):
+                fake_image = fake_images[idx].detach().cpu()
+                fake_image = (fake_image + 1) / 2.0  # Denormalize to [0, 1]
+                fake_image = transforms.ToPILImage()(fake_image)
+                fake_image_name = f"{os.path.splitext(image_names[idx])[0]}_fake{os.path.splitext(image_names[idx])[1]}"
+                fake_image.save(os.path.join(output_dir, fake_image_name))
+
+# Function to plot real, mask, and fake image pairs
+def plot_random_pairs(real_dir, mask_dir, fake_dir, num_pairs=5, suffix='_fake', save_dir=None, plot_name='plot.png'):
+    real_images = os.listdir(real_dir)
+    mask_images = os.listdir(mask_dir)
+    fake_images = os.listdir(fake_dir)
+
+    # Ensure the same number of images and matching filenames
+    real_images_set = set(os.path.splitext(f)[0] for f in real_images)
+    mask_images_set = set(os.path.splitext(f)[0].replace('_mask', '') for f in mask_images)
+    fake_images_set = set(os.path.splitext(f)[0].replace(suffix, '') for f in fake_images)
+    common_images = list(real_images_set & mask_images_set & fake_images_set)
+
+    if len(common_images) < num_pairs:
+        raise ValueError("Not enough matching images in all directories to plot pairs.")
+
+    selected_basenames = random.sample(common_images, num_pairs)
+
+    fig, axes = plt.subplots(3, num_pairs, figsize=(15, 8))
+    fig.tight_layout()
+
+    for i in range(num_pairs):
+        real_image_name = selected_basenames[i] + ".png"  # or ".jpg" depending on your file extension
+        real_image = Image.open(os.path.join(real_dir, real_image_name))
+        axes[0, i].imshow(real_image)
+        axes[0, 2].set_title('Original Images')
+        axes[0, i].axis('off')
+
+        mask_image_name = selected_basenames[i] + "_mask.png"  # or ".jpg" depending on your file extension
+        mask_image = Image.open(os.path.join(mask_dir, mask_image_name))
+        axes[1, i].imshow(mask_image, cmap='gray')
+        axes[1, 2].set_title('Binary Masks')
+        axes[1, i].axis('off')
+
+        fake_image_name = selected_basenames[i] + suffix + ".png"  # or ".jpg" depending on your file extension
+        fake_image = Image.open(os.path.join(fake_dir, fake_image_name))
+        axes[2, i].imshow(fake_image)
+        axes[2, 2].set_title('Synthetic Images')
+        axes[2, i].axis('off')
+
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+        plt.savefig(os.path.join(save_dir, plot_name))
+
+    plt.show()
+
+# Function to plot real, mask, and fake image pairs specific to H2P generator
+def plot_random_pairs_H2P(real_dir, mask_dir, fake_dir, num_pairs=5, suffix='_fake', save_dir=None, plot_name='plot_H2P.png'):
+    real_images = os.listdir(real_dir)
+    fake_images = os.listdir(fake_dir)
+
+    # Ensure the same number of images and matching filenames
+    real_images_set = set(os.path.splitext(f)[0] for f in real_images)
+    fake_images_set = set(os.path.splitext(f)[0].replace(suffix, '') for f in fake_images)
+    common_images = list(real_images_set & fake_images_set)
+
+    if len(common_images) < num_pairs:
+        raise ValueError("Not enough matching images in all directories to plot pairs.")
+
+    selected_basenames = random.sample(common_images, num_pairs)
+
+    fig, axes = plt.subplots(3, num_pairs, figsize=(15, 8))
+    fig.tight_layout()
+
+    for i in range(num_pairs):
+        real_image_name = selected_basenames[i] + ".png"  # or ".jpg"
+        real_image = Image.open(os.path.join(real_dir, real_image_name))
+        axes[0, i].imshow(real_image)
+        axes[0, 2].set_title('Original Images')
+        axes[0, i].axis('off')
+
+        mask_image_name = selected_basenames[i] + "_mask.png"  # or ".jpg"
+        mask_image = Image.open(os.path.join(mask_dir, random.choice(os.listdir(mask_dir))))  # Random mask
+        axes[1, i].imshow(mask_image, cmap='gray')
+        axes[1, 2].set_title('Binary Masks')
+        axes[1, i].axis('off')
+
+        fake_image_name = selected_basenames[i] + suffix + ".png"  # or ".jpg"
+        fake_image = Image.open(os.path.join(fake_dir, fake_image_name))
+        axes[2, i].imshow(fake_image)
+        axes[2, 2].set_title('Synthetic Images')
+        axes[2, i].axis('off')
+
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+        plt.savefig(os.path.join(save_dir, plot_name))
+
+    plt.show()
+
+# Main function to handle both generators
+def main(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=5, save_dir=save_dir):
+    with TemporaryDirectory() as temp_dir_H2P, TemporaryDirectory() as temp_dir_P2H:
+        # Generate and save fake images
+        generate_fake_images(generator_H2P, test_loader_healthy, temp_dir_H2P)
+        generate_fake_images(generator_P2H, test_loader_pathological, temp_dir_P2H)
+        
+        # Plot random pairs for H2P
+        plot_random_pairs_H2P('/content/drive/MyDrive/CycleGAN/Real_Images', '/content/drive/MyDrive/CycleGAN/Masks', temp_dir_H2P, num_pairs=num_images, save_dir=save_dir)
+        
+        # Plot random pairs for P2H
+        plot_random_pairs('/content/drive/MyDrive/CycleGAN/Real_Images', '/content/drive/MyDrive/CycleGAN/Masks', temp_dir_P2H, num_pairs=num_images, save_dir=save_dir)
+
+
