@@ -4,7 +4,7 @@ import torch
 from generate_binary_masks import process_files
 from extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
 from extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
-from train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks, visualize_activations, main_plotting_function
+from train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function
 from cyclegan_with_masks_evaluation import evaluate_model
 from train_cyclegan_without_masks import 
 from augment_original_dataset_with_masks import 
@@ -82,6 +82,8 @@ visualize_activations(generator_H2P, test_loader_healthy, device)
 visualize_activations(generator_P2H, test_loader_pathological, device)
 
 # Plot random pairs of images for visual inspection 
+num_healthy_samples_test = len(test_loader_healthy.dataset)
+test_loader_pathological = limit_samples(test_loader_pathological, num_healthy_samples_test)
 main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=5, save_dir=plot_dir)
 
 # Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
@@ -89,6 +91,8 @@ avg_iou_healthy, avg_ssim_healthy = evaluate_model(generator_H2P, test_loader_he
 print(f'Average IoU (Healthy): {avg_iou_healthy}')
 print(f'Average SSIM (Healthy): {avg_ssim_healthy}')
 
+num_healthy_samples_test = len(test_loader_healthy.dataset)
+test_loader_pathological = limit_samples(test_loader_pathological, num_healthy_samples_test)
 avg_iou_pathological, avg_ssim_pathological = evaluate_model(generator_H2P, test_loader_pathological, device)
 print(f'Average IoU (Pathological): {avg_iou_pathological}')
 print(f'Average SSIM (Pathological): {avg_ssim_pathological}')
