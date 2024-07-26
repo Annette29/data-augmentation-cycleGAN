@@ -18,3 +18,25 @@ This repository contains scripts for:
 3. Extracting 1024*1024 .png patches from SVS images (class: without lesions) with randomness conditionally applied to avoid extracting too many patches
 
 
+---
+
+To use our project, please follow these steps:
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Annette29/data_augmentation_using_cycleGAN.git
+   ```
+
+2. **Navigate to the project directory:**
+   ```bash
+   cd data_augmentation_using_cycleGAN
+   ```
+
+3. **Install the required dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+Ensure you have `git` and `pip` installed on your system before running these commands. If you encounter any issues with permissions, consider using a virtual environment or adding `--user` to the `pip install` command.
+
+---
