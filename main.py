@@ -6,7 +6,6 @@ from generate_binary_masks import process_files
 from extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
 from extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
 from preprocess_training_data import create_dataloaders
-from model_architectures import UNetResNet34, PatchGANDiscriminator, weights_init_normal, WassersteinLossGP, CombinedL1L2Loss, AbnormalityMaskLoss
 from train_cyclegan_with_masks import 
 from cyclegan_with_masks_evaluation import 
 from train_cyclegan_without_masks import 
