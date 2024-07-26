@@ -1,5 +1,4 @@
 import torch
-import torch.autograd as autograd
 from torch.utils.data import DataLoader, random_split, Dataset, RandomSampler, Subset
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
@@ -80,8 +79,8 @@ def create_dataloaders(image_dir, mask_dir, batch_size=8, num_workers=10, shuffl
     return dataloader
 
 # Define root directories
-base_dir = '/content/drive/MyDrive/BRACS Dataset/WSI Patches'
-mask_base_dir = '/content/drive/MyDrive/BRACS Dataset/Mask Patches'
+base_dir = 'your/patches for svs images both with and without lesions/folder'
+mask_base_dir = '/your/binary mask patches/folder'
 
 # Without Lesions
 train_image_dir_healthy = os.path.join(base_dir, 'Without Lesions/Training Data')
@@ -116,6 +115,3 @@ test_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized Wi
                                               os.path.join(mask_base_dir, 'Resized With Lesions/Test Data'),
                                               mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
 
-# Path to save model checkpoints
-checkpoint_path = '/content/drive/My Drive/CycleGAN/Checkpoints'
-os.makedirs(checkpoint_path, exist_ok=True)
