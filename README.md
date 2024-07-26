@@ -9,19 +9,19 @@ Then, under the File tab, choose the Export objects as GeoJSON feature and selec
 
 Also, since each SVS image is too large to process at once, we have extracted patches from each image and its corresponding binary mask (1024*1024) for training. 
 
-This repository contains scripts for:
+This repository contains scripts to help you:
 
-1. Generating binary masks from SVS images guided by coordinates in the .geojson file
+1. Generate binary masks from SVS images guided by coordinates in the .geojson file
 
-2. Extracting 1024*1024 .png patches from SVS images + TIFF binary masks (class: with lesions) guided by coordinates in the .geojson file
+2. Extract 1024*1024 .png patches from SVS images + TIFF binary masks (class: with lesions) guided by coordinates in the .geojson file
 
-3. Extracting 1024*1024 .png patches from SVS images (class: without lesions) with randomness conditionally applied to avoid extracting too many patches
+3. Extract 1024*1024 .png patches from SVS images (class: without lesions) with randomness conditionally applied to avoid extracting too many patches
 
 4. Train a CycleGAN model to synthesize pathology onto healthy images guided by binary masks
 
-5. Evaluate the CycleGAN model
+5. Evaluate the CycleGAN model using IoU and SSIM metrics 
 
-6. Add synthetic images to the original training dataset for the neural network classification task
+6. Add synthetic images to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
 
 7. Train 6 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data: for fake images trained with and without binary masks
 
