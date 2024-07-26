@@ -1,6 +1,6 @@
 import os
 from generate_masks import process_files
-from extract_patches import process_svs_files
+from extract_patches import process_svs_files, resize_images_cv
 
 # Define your paths here
 svs_dir = "/your/original svs images/folder"
