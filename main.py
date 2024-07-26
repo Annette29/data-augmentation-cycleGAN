@@ -2,6 +2,12 @@ import os
 from generate_masks import process_files
 from extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
 from extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
+from load_training_dataset import
+from model_architectures import
+from train_cyclegan import 
+from cyclegan_evaluation import 
+from augment_original_dataset import 
+from classification_task import 
 
 # Define your paths here
 lesions_svs_dir = "/your/original svs images with lesions/folder"
