@@ -58,6 +58,7 @@ Ensure you have `git` and `pip` installed on your system before running these co
 Citation
 If you use this code or find our work helpful, please consider citing this paper:
 
+```bibtex
 @inproceedings{sice23,
   author = {{Annette Waithira Irungu} and {Kotaro Sonoda} and {Makoto Kawamoto} and {Kris Lami} and {Junya Fukuoka} and {Senya Kiyasu}},
   title = {Enhancing mycobacterial disease detection with generative image translation},
@@ -66,3 +67,4 @@ If you use this code or find our work helpful, please consider citing this paper
   month = {oct},
   address = {Nantong, Jiangsu, China}
 }
+```
