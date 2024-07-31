@@ -3,7 +3,8 @@ import os
 from with_masks.train_cyclegan_with_masks import initialize_components, limit_samples
 
 (
-    generator_H2P, generator_P2H
+    generator_H2P, generator_P2H, train_loader_healthy, train_loader_pathological, 
+    validation_loader_healthy, validation_loader_pathological, test_loader_healthy, test_loader_pathological
 ) = initialize_components(device)
 
 # Load previously-saved model checkpoint
