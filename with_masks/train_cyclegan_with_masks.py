@@ -51,12 +51,15 @@ def initialize_components(device):
                                              shuffle=False, random_sampling=True)
     
     # With Lesions
+    train_image_dir_pathological = os.path.join(base_dir, 'Resized With Lesions/Training Data')
     train_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Training Data'),
                                                    os.path.join(mask_base_dir, 'Resized With Lesions/Training Data'),
                                                    mask_name_func=default_mask_name_func)
+    val_image_dir_pathological = os.path.join(base_dir, 'Resized With Lesions/Validation Data')
     val_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Validation Data'),
                                                  os.path.join(mask_base_dir, 'Resized With Lesions/Validation Data'),
                                                  mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
+    test_image_dir_pathological = os.path.join(base_dir, 'Resized With Lesions/Test Data')
     test_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Test Data'),
                                                   os.path.join(mask_base_dir, 'Resized With Lesions/Test Data'),
                                                   mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
