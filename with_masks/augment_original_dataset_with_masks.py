@@ -61,3 +61,42 @@ def generate_fake_samples(data_loader, generator, output_dir, device, suffix='_f
 
                 # Save the fake image
                 fake_image.save(os.path.join(output_dir, fake_image_name))
+
+# Function that selects random images and their corresponding fakes from each dataset and then plots them
+def plot_random_pairs(real_dir, fake_dir, suffix='_fake', num_pairs=5):
+    # Get a list of all image filenames
+    real_images = os.listdir(real_dir)
+    fake_images = os.listdir(fake_dir)
+
+    # Ensure the same number of images and matching filenames
+    real_images_set = set(os.path.splitext(f)[0] for f in real_images)
+    fake_images_set = set(os.path.splitext(f)[0].replace(suffix, '') for f in fake_images)
+    common_images = list(real_images_set & fake_images_set)
+
+    if len(common_images) < num_pairs:
+        raise ValueError("Not enough matching images in both directories to plot pairs.")
+
+    # Randomly select num_pairs images
+    selected_basenames = random.sample(common_images, num_pairs)
+
+    # Plotting
+    fig, axes = plt.subplots(2, num_pairs, figsize=(10, 5), gridspec_kw={'hspace': 0.3})
+
+    for i in range(num_pairs):
+        # Load and plot real image
+        real_image_name = selected_basenames[i] + ".png"  # or ".jpg" depending on your file extension
+        real_image = Image.open(os.path.join(real_dir, real_image_name))
+        axes[0, i].imshow(real_image)
+        axes[0, 2].set_title('Original Images')
+        axes[0, i].axis('off')
+
+        # Load and plot fake image
+        fake_image_name = selected_basenames[i] + suffix + ".png"  # or ".jpg" depending on your file extension
+        fake_image = Image.open(os.path.join(fake_dir, fake_image_name))
+        axes[1, i].imshow(fake_image)
+        axes[1, 2].set_title('Synthetic Images')
+        axes[1, i].axis('off')
+
+    fig.subplots_adjust(wspace=0.1, hspace=0.3, top=0.85)  # Fine-tune spacing between subplots and adjust top margin
+    plt.show()
+
