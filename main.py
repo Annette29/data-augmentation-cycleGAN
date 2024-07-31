@@ -6,12 +6,14 @@ from with_masks.extract_patches_with_lesions import process_svs_files as process
 from with_masks.extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
 from with_masks.train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function
 from with_masks.cyclegan_with_masks_evaluation import evaluate_model
-from preprocess_NN_training_data import 
+from preprocess_NN_training_data import load_all_datasets, combine_datasets
 from without_masks.train_cyclegan_without_masks import 
 from with_masks.augment_original_dataset_with_masks import setup_directories, generate_fake_samples, plot_random_pairs
 from without_masks.augment_original_dataset_without_masks import 
 from with_masks.classification_task_with_masks import 
 from without_masks.classification_task_without_masks import 
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Define your paths here
 lesions_svs_dir = "/your/original svs images with lesions/folder"
@@ -155,6 +157,19 @@ plot_random_pairs(test_image_dir_pathological, fake_F_dir)
 # Step 8: Add synthetic images (created from a CycleGAN trained without binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
 
 # Step 9: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained with binary masks
+base_dir = '/the OG folder with the entire BRACS Dataset'
+datasets, counts = load_all_datasets(base_dir)
+train_combined, val_combined, test_combined = combine_datasets(datasets, counts)
+
+# Print the number of images in each dataset
+print(f"Real Data with Lesions: {counts['train_real_with_lesions']} training, {counts['val_real_with_lesions']} validation, {counts['test_real_with_lesions']} testing")
+print(f"Synthetic Data with Lesions: {counts['train_synthetic_with_lesions']} training, {counts['val_synthetic_with_lesions']} validation, {counts['test_synthetic_with_lesions']} testing")
+print(f"Real Data without Lesions: {counts['train_real_without_lesions']} training, {counts['val_real_without_lesions']} validation, {counts['test_real_without_lesions']} testing")
+print(f"Synthetic Data without Lesions: {counts['train_synthetic_without_lesions']} training, {counts['val_synthetic_without_lesions']} validation, {counts['test_synthetic_without_lesions']} testing")
+print(f"Combined training dataset: {len(train_combined)} images")
+print(f"Combined validation dataset: {len(val_combined)} images")
+print(f"Combined testing dataset: {len(test_combined)} images")
+
 
 # Step 10: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
 
