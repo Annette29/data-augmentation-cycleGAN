@@ -55,3 +55,14 @@ To use our project, please follow these steps:
 Ensure you have `git` and `pip` installed on your system before running these commands. If you encounter any issues with permissions, consider using a virtual environment or adding `--user` to the `pip install` command.
 
 ---
+Citation
+If you use this code or find our work helpful, please consider citing this paper:
+
+@inproceedings{sice23,
+  author = {{Annette Waithira Irungu} and {Kotaro Sonoda} and {Makoto Kawamoto} and {Kris Lami} and {Junya Fukuoka} and {Senya Kiyasu}},
+  title = {Enhancing mycobacterial disease detection with generative image translation},
+  booktitle = {SPIE/COS Photonics Asia},
+  year = {2024},
+  month = {oct},
+  address = {Nantong, Jiangsu, China}
+}
