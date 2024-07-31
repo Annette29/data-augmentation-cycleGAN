@@ -1,16 +1,16 @@
 import os
 import torch 
 
-from generate_binary_masks import process_files
-from extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
-from extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
-from train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function
-from cyclegan_with_masks_evaluation import evaluate_model
-from train_cyclegan_without_masks import 
-from augment_original_dataset_with_masks import 
-from augment_original_dataset_without_masks import 
-from classification_task_with_masks import 
-from classification_task_without_masks import 
+from with_masks.generate_binary_masks import process_files
+from with_masks.extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
+from with_masks.extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
+from with_masks.train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function
+from with_masks.cyclegan_with_masks_evaluation import evaluate_model
+from without_masks.train_cyclegan_without_masks import 
+from with_masks.augment_original_dataset_with_masks import 
+from without_masks.augment_original_dataset_without_masks import 
+from with_masks.classification_task_with_masks import 
+from without_masks.classification_task_without_masks import 
 
 # Define your paths here
 lesions_svs_dir = "/your/original svs images with lesions/folder"
