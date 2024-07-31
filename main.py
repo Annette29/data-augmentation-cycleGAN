@@ -7,7 +7,7 @@ from with_masks.extract_patches_without_lesions import process_svs_files as proc
 from with_masks.train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function
 from with_masks.cyclegan_with_masks_evaluation import evaluate_model
 from without_masks.train_cyclegan_without_masks import 
-from with_masks.augment_original_dataset_with_masks import 
+from with_masks.augment_original_dataset_with_masks import setup_directories, generate_fake_samples, plot_random_pairs
 from without_masks.augment_original_dataset_without_masks import 
 from with_masks.classification_task_with_masks import 
 from without_masks.classification_task_without_masks import 
@@ -103,7 +103,53 @@ print(f'Average SSIM (Pathological): {avg_ssim_pathological}')
 
 # Step 6: Train a CycleGAN model to synthesize pathology onto healthy images without any conditional input
 
-# Step 7: Add synthetic images (created from a CycleGAN trained with binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
+# Step 7: Add synthetic images (created from a CycleGAN trained with binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities
+(
+    generator_H2P, generator_P2H,
+    train_image_dir_healthy, train_image_dir_pathological, train_loader_healthy, train_loader_pathological, 
+    val_image_dir_healthy, val_image_dir_pathological, val_loader_healthy, val_loader_pathological, 
+    test_image_dir_healthy, test_image_dir_pathological, test_loader_healthy, test_loader_pathological
+) = initialize_components(device)
+
+# Limit the number of samples in both loaders to match the loader with the fewer number of images (depends on your dataset)
+num_healthy_samples_train = len(train_loader_healthy.dataset)
+train_loader_pathological = limit_samples(train_loader_pathological, num_healthy_samples_train)
+
+num_healthy_samples_val = len(val_loader_pathological.dataset)
+val_loader_healthy = limit_samples(val_loader_healthy, num_healthy_samples_val)
+
+num_healthy_samples_test = len(test_loader_healthy.dataset)
+test_loader_pathological = limit_samples(test_loader_pathological, num_healthy_samples_test)
+
+# Specify the base directory and subdirectory structure
+base_dir = "/your/synthetic data/folder"
+categories = ['Without Lesions', 'With Lesions']
+sub_dirs = ['Training Data', 'Validation Data', 'Test Data']
+
+# Ensure necessary directories exist
+setup_directories(base_dir, categories, sub_dirs)
+
+# Directories for saving fake images
+fake_A_dir = os.path.join(base_dir, 'Without Lesions', 'Training Data')    
+fake_B_dir = os.path.join(base_dir, 'With Lesions', 'Training Data')
+fake_C_dir = os.path.join(base_dir, 'Without Lesions', 'Validation Data')
+fake_D_dir = os.path.join(base_dir, 'With Lesions', 'Validation Data')
+fake_E_dir = os.path.join(base_dir, 'Without Lesions', 'Test Data')
+fake_F_dir = os.path.join(base_dir, 'With Lesions', 'Test Data')
+
+# Generate fake samples for the respective data loaders and directories & select random images and their corresponding fakes from each dataset, and then plot them
+generate_fake_samples(train_loader_healthy, generator_H2P, fake_A_dir, device)
+plot_random_pairs(train_image_dir_healthy, fake_A_dir)
+generate_fake_samples(train_loader_pathological, generator_P2H, fake_B_dir, device)
+plot_random_pairs(train_image_dir_pathological, fake_B_dir)
+generate_fake_samples(val_loader_healthy, generator_H2P, fake_C_dir, device)
+plot_random_pairs(val_image_dir_healthy, fake_C_dir)
+generate_fake_samples(val_loader_pathological, generator_P2H, fake_D_dir, device)
+plot_random_pairs(val_image_dir_pathological, fake_D_dir)
+generate_fake_samples(test_loader_healthy, generator_H2P, fake_E_dir, device)
+plot_random_pairs(test_image_dir_healthy, fake_E_dir)
+generate_fake_samples(test_loader_pathological, generator_P2H, fake_F_dir, device)
+plot_random_pairs(test_image_dir_pathological, fake_F_dir)
 
 # Step 8: Add synthetic images (created from a CycleGAN trained without binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
 
