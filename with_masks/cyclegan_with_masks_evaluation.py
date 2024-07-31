@@ -1,4 +1,3 @@
-from with_masks.model_with_masks_architectures import UNetResNet34
 from with_masks.train_cyclegan_with_masks import initialize_components
 
 import os
