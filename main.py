@@ -6,6 +6,7 @@ from with_masks.extract_patches_with_lesions import process_svs_files as process
 from with_masks.extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
 from with_masks.train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function
 from with_masks.cyclegan_with_masks_evaluation import evaluate_model
+from preprocess_NN_training_data import 
 from without_masks.train_cyclegan_without_masks import 
 from with_masks.augment_original_dataset_with_masks import setup_directories, generate_fake_samples, plot_random_pairs
 from without_masks.augment_original_dataset_without_masks import 
