@@ -1,5 +1,5 @@
-from model_with_masks_architectures import UNetResNet34
-from train_cyclegan_with_masks import initialize_components
+from with_masks.model_with_masks_architectures import UNetResNet34
+from with_masks.train_cyclegan_with_masks import initialize_components
 
 import os
 import numpy as np
