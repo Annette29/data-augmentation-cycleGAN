@@ -17,8 +17,8 @@ from tempfile import TemporaryDirectory
 
 device = "cuda" if torch.cuda.is_available() else "CPU"
 
-from preprocess_training_data import create_dataloaders
-from model_with_masks_architectures import UNetResNet34, PatchGANDiscriminator, weights_init_normal, WassersteinLossGP, CombinedL1L2Loss, AbnormalityMaskLoss
+from with_masks.preprocess_training_data import create_dataloaders
+from with_masks.model_with_masks_architectures import UNetResNet34, PatchGANDiscriminator, weights_init_normal, WassersteinLossGP, CombinedL1L2Loss, AbnormalityMaskLoss
 
 def initialize_components(device):
     # Create dataloaders for the training, validation, and test datasets for images with and without lesions & binary masks for images with lesions
