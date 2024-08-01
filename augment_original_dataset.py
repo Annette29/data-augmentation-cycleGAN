@@ -42,6 +42,23 @@ def generate_fake_samples_masks(data_loader, generator, output_dir, device, suff
                 # Save the fake image
                 fake_image.save(os.path.join(output_dir, fake_image_name))
 
+def generate_fake_samples_without_masks(generator, data_loader, output_dir, suffix='_fake'):
+    generator.eval()
+    with torch.no_grad():
+        for batch_idx, (real_images, image_names) in enumerate(data_loader):
+            real_images = real_images.to(device)
+
+            # Generate fake images
+            fake_images = generator(real_images)
+
+            # Save fake images
+            for idx in range(fake_images.size(0)):
+                fake_image = fake_images[idx].detach().cpu()
+                fake_image = (fake_image + 1) / 2.0  # Denormalize to [0, 1]
+                fake_image = transforms.ToPILImage()(fake_image)
+                fake_image_name = f"{os.path.splitext(image_names[idx])[0]}{suffix}{os.path.splitext(image_names[idx])[1]}"
+                fake_image.save(os.path.join(output_dir, fake_image_name))
+
 # Function that selects random images and their corresponding fakes from each dataset and then plots them
 def plot_random_pairs(real_dir, fake_dir, suffix='_fake', num_pairs=5):
     # Get a list of all image filenames
