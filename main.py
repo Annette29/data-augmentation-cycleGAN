@@ -10,8 +10,7 @@ from preprocess_NN_training_data import load_all_datasets, combine_datasets
 from without_masks.train_cyclegan_without_masks import 
 from with_masks.augment_original_dataset_with_masks import setup_directories, generate_fake_samples, plot_random_pairs
 from without_masks.augment_original_dataset_without_masks import 
-from with_masks.classification_task_with_masks import initialize_model, FocalLoss, train_model, plot_sensitivity_vs_fp_comparison
-from without_masks.classification_task_without_masks import 
+from classification_task import initialize_model, FocalLoss, train_model, plot_sensitivity_vs_fp_comparison
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -177,9 +176,36 @@ model, optimizer, scheduler = initialize_model(weights)
 criterion = FocalLoss(alpha=2, gamma=3, reduction='mean')
 
 # Train the model
-best_model, sensitivity_progression_real, false_positives_progression_real = train_model(
+best_model_real, sensitivity_progression_real, false_positives_progression_real = train_model(
     model,
-    train_data, val_data,
+    train_real, val_real,
+    criterion, optimizer, scheduler,
+    num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
+    batch_size=32,
+    threshold=0.7
+)
+
+best_model_synthetic, sensitivity_progression_synthetic, false_positives_progression_synthetic = train_model(
+    model,
+    train_synthetic, val_synthetic,
+    criterion, optimizer, scheduler,
+    num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
+    batch_size=32,
+    threshold=0.7
+)
+
+best_model_combined_masks, sensitivity_progression_combined_masks, false_positives_progression_combined_masks = train_model(
+    model,
+    train_combined_masks, val_combined_masks,
+    criterion, optimizer, scheduler,
+    num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
+    batch_size=32,
+    threshold=0.7
+)
+
+best_model_combined_without_masks, sensitivity_progression_combined_without_masks, false_positives_progression_combined_without_masks = train_model(
+    model,
+    train_combined_without_masks, val_combined_without_masks,
     criterion, optimizer, scheduler,
     num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
     batch_size=32,
@@ -190,8 +216,12 @@ best_model, sensitivity_progression_real, false_positives_progression_real = tra
 plot_sensitivity_vs_fp_comparison(
     sensitivity_progression_real, false_positives_progression_real,
     sensitivity_progression_synthetic, false_positives_progression_synthetic,
-    sensitivity_progression_combined, false_positives_progression_combined
+    sensitivity_progression_combined_masks, false_positives_progression_combined_masks
 )
 
 # Plot the sensitivity vs false positives comparison (using real, synthetic, and combined_without_masks data)
-
+plot_sensitivity_vs_fp_comparison(
+    sensitivity_progression_real, false_positives_progression_real,
+    sensitivity_progression_synthetic, false_positives_progression_synthetic,
+    sensitivity_progression_combined_without_masks, false_positives_progression_combined_without_masks
+)
