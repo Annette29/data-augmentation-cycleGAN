@@ -3,7 +3,7 @@
 
 Please find and download the BRACS Dataset from here: https://www.bracs.icar.cnr.it/ 
 
-PS: This dataset is only for practice as we have trained our model using a private institutional dataset from Nagasaki University Hospital. However, please feel free to use the BRACS dataset to validate our method as it is publicly available :)
+PS: This dataset is only for practice as we have trained our model using a private institutional dataset from Nagasaki University Hospital. However, please feel free to use the BRACS dataset to validate our method, as it is publicly available :)
 
 After downloading, please open the SVS files and their corresponding .qpdata annotations using the QuPath software, which you can install from here: https://qupath.github.io/
 
@@ -57,7 +57,7 @@ Citation
 If you use this code or find our work helpful, please consider citing this paper:
 
 ```bibtex
-@inproceedings{sice23,
+@inproceedings{spie24,
   author = {{Annette Waithira Irungu} and {Kotaro Sonoda} and {Makoto Kawamoto} and {Kris Lami} and {Junya Fukuoka} and {Senya Kiyasu}},
   title = {Enhancing mycobacterial disease detection with generative image translation},
   booktitle = {SPIE/COS Photonics Asia},
