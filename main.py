@@ -10,7 +10,9 @@ from preprocess_NN_training_data import load_all_datasets, combine_datasets
 from without_masks.train_cyclegan_without_masks import 
 from with_masks.augment_original_dataset_with_masks import setup_directories, generate_fake_samples, plot_random_pairs
 from without_masks.augment_original_dataset_without_masks import 
-from classification_task import initialize_model, FocalLoss, train_model, plot_sensitivity_vs_fp_comparison
+from classification_task import initialize_model, train_model
+from classification_task import plot_sensitivity_vs_fp_comparison as plot_sensitivity_vs_fp_comparison_masks
+from classification_task import plot_sensitivity_vs_fp_comparison as plot_sensitivity_vs_fp_comparison_without_masks
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -170,10 +172,7 @@ test_combined_without_masks = combined_datasets['test_combined_without_masks']
 
 # Initialize model, optimizer, scheduler
 weights = None  # Set to None or a path to weights
-model, optimizer, scheduler = initialize_model(weights)
-
-# Define criterion
-criterion = FocalLoss(alpha=2, gamma=3, reduction='mean')
+model, criterion, optimizer, scheduler = initialize_model(weights)
 
 # Train the model
 best_model_real, sensitivity_progression_real, false_positives_progression_real = train_model(
@@ -213,14 +212,14 @@ best_model_combined_without_masks, sensitivity_progression_combined_without_mask
 )
 
 # Plot the sensitivity vs false positives comparison (using real, synthetic, and combined_masks data)
-plot_sensitivity_vs_fp_comparison(
+plot_sensitivity_vs_fp_comparison_masks(
     sensitivity_progression_real, false_positives_progression_real,
     sensitivity_progression_synthetic, false_positives_progression_synthetic,
     sensitivity_progression_combined_masks, false_positives_progression_combined_masks
 )
 
 # Plot the sensitivity vs false positives comparison (using real, synthetic, and combined_without_masks data)
-plot_sensitivity_vs_fp_comparison(
+plot_sensitivity_vs_fp_comparison_without_masks(
     sensitivity_progression_real, false_positives_progression_real,
     sensitivity_progression_synthetic, false_positives_progression_synthetic,
     sensitivity_progression_combined_without_masks, false_positives_progression_combined_without_masks
