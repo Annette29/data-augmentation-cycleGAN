@@ -156,19 +156,18 @@ plot_random_pairs(test_image_dir_pathological, fake_F_dir)
 
 # Step 8: Add synthetic images (created from a CycleGAN trained without binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
 
-# Step 9: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained with binary masks
+# Step 9: Train 4 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, real + synthetic data for fake images created from a CycleGAN trained with binary masks, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
 base_dir = '/the OG folder with the entire BRACS Dataset (real and synthetic)/'
 datasets, counts = load_all_datasets(base_dir)
 train_combined, val_combined, test_combined = combine_datasets(datasets, counts)
 
-# Print the number of images in each dataset
-print(f"Real Data with Lesions: {counts['train_real_with_lesions']} training, {counts['val_real_with_lesions']} validation, {counts['test_real_with_lesions']} testing")
-print(f"Synthetic Data with Lesions: {counts['train_synthetic_with_lesions']} training, {counts['val_synthetic_with_lesions']} validation, {counts['test_synthetic_with_lesions']} testing")
-print(f"Real Data without Lesions: {counts['train_real_without_lesions']} training, {counts['val_real_without_lesions']} validation, {counts['test_real_without_lesions']} testing")
-print(f"Synthetic Data without Lesions: {counts['train_synthetic_without_lesions']} training, {counts['val_synthetic_without_lesions']} validation, {counts['test_synthetic_without_lesions']} testing")
-print(f"Combined training dataset: {len(train_combined)} images")
-print(f"Combined validation dataset: {len(val_combined)} images")
-print(f"Combined testing dataset: {len(test_combined)} images")
+train_combined_with_masks = combined_datasets['train_combined_with_masks']
+val_combined_with_masks = combined_datasets['val_combined_with_masks']
+test_combined_with_masks = combined_datasets['test_combined_with_masks']
+
+train_combined_without_masks = combined_datasets['train_combined_without_masks']
+val_combined_without_masks = combined_datasets['val_combined_without_masks']
+test_combined_without_masks = combined_datasets['test_combined_without_masks']
 
 # Initialize model, optimizer, scheduler
 weights = None  # Set to None or a path to weights
@@ -178,7 +177,7 @@ model, optimizer, scheduler = initialize_model(weights)
 criterion = FocalLoss(alpha=2, gamma=3, reduction='mean')
 
 # Train the model
-best_model, sensitivity_progression, false_positives_progression = train_model(
+best_model, sensitivity_progression_real, false_positives_progression_real = train_model(
     model,
     train_data, val_data,
     criterion, optimizer, scheduler,
@@ -187,14 +186,12 @@ best_model, sensitivity_progression, false_positives_progression = train_model(
     threshold=0.7
 )
 
-# Plot the sensitivity vs false positives comparison (using real, synthetic, and combined data)
+# Plot the sensitivity vs false positives comparison (using real, synthetic, and combined_masks data)
 plot_sensitivity_vs_fp_comparison(
     sensitivity_progression_real, false_positives_progression_real,
     sensitivity_progression_synthetic, false_positives_progression_synthetic,
     sensitivity_progression_combined, false_positives_progression_combined
 )
 
-# Step 10: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
-
-
+# Plot the sensitivity vs false positives comparison (using real, synthetic, and combined_without_masks data)
 
