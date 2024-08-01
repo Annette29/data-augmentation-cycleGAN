@@ -18,6 +18,7 @@ from tempfile import TemporaryDirectory
 from without_masks.preprocess_GAN_training_data_without_masks import create_dataloaders_no_masks
 from without_masks.model_without_masks_architectures import UNetResNet34, PatchGANDiscriminator, weights_init_normal, WassersteinLossGP, CombinedL1L2Loss
 from with_masks.train_cyclegan_with_masks import load_generators
+from augment_original_dataset import generate_fake_samples_without_masks
 
 def initialize_components(device):
     # Create dataloaders for the training, validation, and test datasets for images with and without lesions
@@ -347,25 +348,6 @@ def train_cyclegan_without_masks(
 def denormalize(tensor):
     return tensor * 0.5 + 0.5
 
-# Function to generate fake images
-def generate_fake_images(generator, data_loader, output_dir, suffix='_fake'):
-    os.makedirs(output_dir, exist_ok=True)
-    generator.eval()
-    with torch.no_grad():
-        for batch_idx, (real_images, image_names) in enumerate(data_loader):
-            real_images = real_images.to(device)
-
-            # Generate fake images
-            fake_images = generator(real_images)
-
-            # Save fake images
-            for idx in range(fake_images.size(0)):
-                fake_image = fake_images[idx].detach().cpu()
-                fake_image = (fake_image + 1) / 2.0  # Denormalize to [0, 1]
-                fake_image = transforms.ToPILImage()(fake_image)
-                fake_image_name = f"{os.path.splitext(image_names[idx])[0]}{suffix}{os.path.splitext(image_names[idx])[1]}"
-                fake_image.save(os.path.join(output_dir, fake_image_name))
-
 # Function to visualize synthetic images alongside real images
 def plot_random_pairs(real_dir, fake_dir, num_pairs=5, suffix='_fake', save_dir=None, plot_name='plot.png'):
     # Get a list of all image filenames
@@ -413,8 +395,8 @@ def plot_random_pairs(real_dir, fake_dir, num_pairs=5, suffix='_fake', save_dir=
 def main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy_no_masks, test_loader_pathological_no_masks, limit_samples, num_images=num_pairs, save_dir=save_dir):
     with TemporaryDirectory() as temp_dir_H2P, TemporaryDirectory() as temp_dir_P2H:
         # Generate and save fake images
-        generate_fake_images(generator_H2P, test_loader_healthy_no_masks, temp_dir_H2P)
-        generate_fake_images(generator_P2H, test_loader_pathological_no_masks, temp_dir_P2H)
+        generate_fake_samples_without_masks(generator_H2P, test_loader_healthy_no_masks, temp_dir_H2P)
+        generate_fake_samples_without_masks(generator_P2H, test_loader_pathological_no_masks, temp_dir_P2H)
 
         plot_random_pairs(real_image_dir_healthy, temp_dir_H2P, num_images, save_dir=save_dir, plot_name=f'H2P_epoch{num_epochs - 1}.png')
         plot_random_pairs(real_image_dir_pathological, temp_dir_P2H, num_images, save_dir=save_dir, plot_name=f'P2H_epoch{num_epochs - 1}.png')
