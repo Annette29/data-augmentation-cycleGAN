@@ -88,7 +88,7 @@ visualize_activations(generator_P2H, test_loader_pathological, device)
 # Plot random sets of images for visual inspection 
 num_healthy_samples_test = len(test_loader_healthy.dataset)
 test_loader_pathological = limit_samples(test_loader_pathological, num_healthy_samples_test)
-main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=5, save_dir=plot_dir)
+main_plotting_function_masks(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=5, save_dir=plot_dir)
 
 # Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
 (
@@ -132,13 +132,13 @@ num_healthy_samples_test = len(test_loader_healthy_no_masks.dataset)
 test_loader_pathological_no_masks = limit_samples(test_loader_pathological_no_masks, num_healthy_samples_test)
 main_plotting_function_without_masks(generator_H2P, generator_P2H, test_loader_healthy_no_masks, test_loader_pathological_no_masks, num_images=5, save_dir=plot_dir)
 
-# Step 7: Add synthetic images (created from a CycleGAN trained with binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities
+# Step 7: Add synthetic images (created from 1. a CycleGAN trained with binary masks, 2. a CycleGAN trained with no conditional input) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities
 (
     generator_H2P, generator_P2H,
     train_image_dir_healthy, train_image_dir_pathological, train_loader_healthy, train_loader_pathological, 
     val_image_dir_healthy, val_image_dir_pathological, val_loader_healthy, val_loader_pathological, 
     test_image_dir_healthy, test_image_dir_pathological, test_loader_healthy, test_loader_pathological
-) = initialize_components(device)
+) = initialize_components_masks(device)
 
 # Limit the number of samples in both loaders to match the loader with the fewer number of images (depends on your dataset)
 num_healthy_samples_train = len(train_loader_healthy.dataset)
@@ -180,9 +180,9 @@ plot_random_pairs(test_image_dir_healthy, fake_E_dir)
 generate_fake_samples(test_loader_pathological, generator_P2H, fake_F_dir, device)
 plot_random_pairs(test_image_dir_pathological, fake_F_dir)
 
-# Step 8: Add synthetic images (created from a CycleGAN trained without binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
 
-# Step 9: Train 4 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, real + synthetic data for fake images created from a CycleGAN trained with binary masks, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
+
+# Step 8: Train 4 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, real + synthetic data for fake images created from a CycleGAN trained with binary masks, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
 base_dir = '/the OG folder with the entire BRACS Dataset (real and synthetic)/'
 datasets, counts = load_all_datasets(base_dir)
 train_combined, val_combined, test_combined = combine_datasets(datasets, counts)
