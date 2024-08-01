@@ -2,7 +2,7 @@ import os
 import torch 
 
 from with_masks.generate_binary_masks import process_files
-from with_masks.extract_patches_with_lesions import process_svs_files as process_folder_with_lesions, resize_images_cv
+from with_masks.extract_patches_with_lesions import resize_images_cv, process_svs_files as process_folder_with_lesions
 from with_masks.extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
 from with_masks.train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function
 from with_masks.cyclegan_with_masks_evaluation import evaluate_model
@@ -10,7 +10,7 @@ from preprocess_NN_training_data import load_all_datasets, combine_datasets
 from without_masks.train_cyclegan_without_masks import 
 from with_masks.augment_original_dataset_with_masks import setup_directories, generate_fake_samples, plot_random_pairs
 from without_masks.augment_original_dataset_without_masks import 
-from with_masks.classification_task_with_masks import 
+from with_masks.classification_task_with_masks import initialize_model, FocalLoss, train_model, plot_sensitivity_vs_fp_comparison
 from without_masks.classification_task_without_masks import 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -157,7 +157,7 @@ plot_random_pairs(test_image_dir_pathological, fake_F_dir)
 # Step 8: Add synthetic images (created from a CycleGAN trained without binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
 
 # Step 9: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained with binary masks
-base_dir = '/the OG folder with the entire BRACS Dataset'
+base_dir = '/the OG folder with the entire BRACS Dataset (real and synthetic)/'
 datasets, counts = load_all_datasets(base_dir)
 train_combined, val_combined, test_combined = combine_datasets(datasets, counts)
 
@@ -170,6 +170,29 @@ print(f"Combined training dataset: {len(train_combined)} images")
 print(f"Combined validation dataset: {len(val_combined)} images")
 print(f"Combined testing dataset: {len(test_combined)} images")
 
+# Initialize model, optimizer, scheduler
+weights = None  # Set to None or a path to weights
+model, optimizer, scheduler = initialize_model(weights)
+
+# Define criterion
+criterion = FocalLoss(alpha=2, gamma=3, reduction='mean')
+
+# Train the model
+best_model, sensitivity_progression, false_positives_progression = train_model(
+    model,
+    train_data, val_data,
+    criterion, optimizer, scheduler,
+    num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
+    batch_size=32,
+    threshold=0.7
+)
+
+# Plot the sensitivity vs false positives comparison (using real, synthetic, and combined data)
+plot_sensitivity_vs_fp_comparison(
+    sensitivity_progression_real, false_positives_progression_real,
+    sensitivity_progression_synthetic, false_positives_progression_synthetic,
+    sensitivity_progression_combined, false_positives_progression_combined
+)
 
 # Step 10: Train 3 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
 
