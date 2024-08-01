@@ -1,14 +1,14 @@
 import os
 import torch 
 
-from with_masks.generate_binary_masks import process_files
-from with_masks.extract_patches_with_lesions import resize_images_cv, process_svs_files as process_folder_with_lesions
-from with_masks.extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
+from generate_binary_masks import process_files
+from extract_patches_with_lesions import resize_images_cv, process_svs_files as process_folder_with_lesions
+from extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
 from with_masks.train_cyclegan_with_masks import initialize_components as initialize_components_masks, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function as main_plotting_function_masks
 from with_masks.cyclegan_with_masks_evaluation import evaluate_model
-from preprocess_NN_training_data import load_all_datasets, combine_datasets
 from without_masks.train_cyclegan_without_masks import initialize_components as initialize_components_without_masks, train_cyclegan_without_masks, main_plotting_function as main_plotting_function_without_masks
 from augment_original_dataset import setup_directories, generate_fake_samples_masks, generate_fake_samples_without_masks, plot_random_pairs
+from preprocess_NN_training_data import load_all_datasets, combine_datasets
 from classification_task import initialize_model, train_model
 from classification_task import plot_sensitivity_vs_fp_comparison as plot_sensitivity_vs_fp_comparison_masks
 from classification_task import plot_sensitivity_vs_fp_comparison as plot_sensitivity_vs_fp_comparison_without_masks
@@ -106,7 +106,7 @@ print(f'Average SSIM (Pathological): {avg_ssim_pathological}')
 
 # Step 6: Train a CycleGAN model to synthesize pathology onto healthy images without any conditional input
 (
-    generator_H2P, generator_P2H, discriminator_H, discriminator_P,
+    generator_H2P_no_masks, generator_P2H_no_masks, discriminator_H, discriminator_P,
     train_loader_healthy_no_masks, train_loader_pathological_no_masks, val_loader_healthy_no_masks, val_loader_pathological_no_masks,
     optimizer_G, optimizer_D_H, optimizer_D_P,
     scheduler_G, scheduler_D_H, scheduler_D_P,
@@ -115,7 +115,7 @@ print(f'Average SSIM (Pathological): {avg_ssim_pathological}')
 ) = initialize_components_without_masks(device)
 
 train_cyclegan_without_masks(
-    generator_H2P, generator_P2H, discriminator_H, discriminator_P,
+    generator_H2P_no_masks, generator_P2H_no_masks, discriminator_H, discriminator_P,
     train_loader_healthy_no_masks, train_loader_pathological_no_masks, val_loader_healthy_no_masks, val_loader_pathological_no_masks,
     optimizer_G, optimizer_D_H, optimizer_D_P,
     scheduler_G, scheduler_D_H, scheduler_D_P,
@@ -127,9 +127,9 @@ train_cyclegan_without_masks(
 )
 
 # Plot random pairs of images for visual inspection 
-num_healthy_samples_test = len(test_loader_healthy_no_masks.dataset)
-test_loader_pathological_no_masks = limit_samples(test_loader_pathological_no_masks, num_healthy_samples_test)
-main_plotting_function_without_masks(generator_H2P, generator_P2H, test_loader_healthy_no_masks, test_loader_pathological_no_masks, num_images=5, save_dir=plot_dir)
+num_healthy_samples_test_no_masks = len(test_loader_healthy_no_masks.dataset)
+test_loader_pathological_no_masks = limit_samples(test_loader_pathological_no_masks, num_healthy_samples_test_no_masks)
+main_plotting_function_without_masks(generator_H2P_no_masks, generator_P2H_no_masks, test_loader_healthy_no_masks, test_loader_pathological_no_masks, num_images=5, save_dir=plot_dir)
 
 # Step 7: Add synthetic images (created from 1. a CycleGAN trained with binary masks, 2. a CycleGAN trained with no conditional input) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities
 (
@@ -138,6 +138,13 @@ main_plotting_function_without_masks(generator_H2P, generator_P2H, test_loader_h
     val_image_dir_healthy, val_image_dir_pathological, val_loader_healthy, val_loader_pathological, 
     test_image_dir_healthy, test_image_dir_pathological, test_loader_healthy, test_loader_pathological
 ) = initialize_components_masks(device)
+
+(
+    generator_H2P_no_masks, generator_P2H_no_masks,
+    train_image_dir_healthy, train_image_dir_pathological, train_loader_healthy_no_masks, train_loader_pathological_no_masks, 
+    val_image_dir_healthy, val_image_dir_pathological, val_loader_healthy_no_masks, val_loader_pathological_no_masks, 
+    test_image_dir_healthy, test_image_dir_pathological, test_loader_healthy_no_masks, test_loader_pathological_no_masks
+) = initialize_components_without_masks(device)
 
 # Limit the number of samples in both loaders to match the loader with the fewer number of images (depends on your dataset)
 num_healthy_samples_train = len(train_loader_healthy.dataset)
@@ -149,23 +156,40 @@ val_loader_healthy = limit_samples(val_loader_healthy, num_healthy_samples_val)
 num_healthy_samples_test = len(test_loader_healthy.dataset)
 test_loader_pathological = limit_samples(test_loader_pathological, num_healthy_samples_test)
 
-# Specify the base directory and subdirectory structure
-base_dir = "/your/synthetic data/folder"
-categories = ['Without Lesions', 'With Lesions']
+num_healthy_samples_train_no_masks = len(train_loader_healthy_no_masks.dataset)
+train_loader_pathological_no_masks = limit_samples(train_loader_pathological_no_masks, num_healthy_samples_train_no_masks)
+
+num_healthy_samples_val_no_masks = len(val_loader_pathological_no_masks.dataset)
+val_loader_healthy_no_masks = limit_samples(val_loader_healthy_no_masks, num_healthy_samples_val_no_masks)
+
+num_healthy_samples_test_no_masks = len(test_loader_healthy_no_masks.dataset)
+test_loader_pathological_no_masks = limit_samples(test_loader_pathological_no_masks, num_healthy_samples_test_no_masks)
+
+# Specify the base directory and the directory structure
+base_dir = "/your/synthetic_data/folder"
+main_categories = ['With Masks', 'Without Masks']
+sub_categories = ['Without Lesions', 'With Lesions']
 sub_dirs = ['Training Data', 'Validation Data', 'Test Data']
 
 # Ensure necessary directories exist
-setup_directories(base_dir, categories, sub_dirs)
+setup_directories(base_dir, main_categories, sub_categories, sub_dirs)
 
 # Directories for saving fake images
-fake_A_dir = os.path.join(base_dir, 'Without Lesions', 'Training Data')    
-fake_B_dir = os.path.join(base_dir, 'With Lesions', 'Training Data')
-fake_C_dir = os.path.join(base_dir, 'Without Lesions', 'Validation Data')
-fake_D_dir = os.path.join(base_dir, 'With Lesions', 'Validation Data')
-fake_E_dir = os.path.join(base_dir, 'Without Lesions', 'Test Data')
-fake_F_dir = os.path.join(base_dir, 'With Lesions', 'Test Data')
+fake_A_dir = os.path.join(base_dir, 'With Masks', 'Without Lesions', 'Training Data')
+fake_B_dir = os.path.join(base_dir, 'With Masks', 'With Lesions', 'Training Data')
+fake_C_dir = os.path.join(base_dir, 'With Masks', 'Without Lesions', 'Validation Data')
+fake_D_dir = os.path.join(base_dir, 'With Masks', 'With Lesions', 'Validation Data')
+fake_E_dir = os.path.join(base_dir, 'With Masks', 'Without Lesions', 'Test Data')
+fake_F_dir = os.path.join(base_dir, 'With Masks', 'With Lesions', 'Test Data')
+fake_G_dir = os.path.join(base_dir, 'Without Masks', 'Without Lesions', 'Training Data')
+fake_H_dir = os.path.join(base_dir, 'Without Masks', 'With Lesions', 'Training Data')
+fake_I_dir = os.path.join(base_dir, 'Without Masks', 'Without Lesions', 'Validation Data')
+fake_J_dir = os.path.join(base_dir, 'Without Masks', 'With Lesions', 'Validation Data')
+fake_K_dir = os.path.join(base_dir, 'Without Masks', 'Without Lesions', 'Test Data')
+fake_L_dir = os.path.join(base_dir, 'Without Masks', 'With Lesions', 'Test Data')
 
 # Generate fake samples for the respective data loaders and directories & select random images and their corresponding fakes from each dataset, and then plot them
+# For With Masks
 generate_fake_samples_masks(train_loader_healthy, generator_H2P, fake_A_dir, device)
 plot_random_pairs(train_image_dir_healthy, fake_A_dir)
 generate_fake_samples_masks(train_loader_pathological, generator_P2H, fake_B_dir, device)
@@ -179,7 +203,19 @@ plot_random_pairs(test_image_dir_healthy, fake_E_dir)
 generate_fake_samples_masks(test_loader_pathological, generator_P2H, fake_F_dir, device)
 plot_random_pairs(test_image_dir_pathological, fake_F_dir)
 
-
+# For Without Masks
+generate_fake_samples_without_masks(train_loader_healthy_no_masks, generator_H2P_no_masks, fake_G_dir, device)
+plot_random_pairs(train_image_dir_healthy, fake_G_dir)
+generate_fake_samples_without_masks(train_loader_pathological_no_masks, generator_P2H_no_masks, fake_H_dir, device)
+plot_random_pairs(train_image_dir_pathological, fake_H_dir)
+generate_fake_samples_without_masks(val_loader_healthy_no_masks, generator_H2P_no_masks, fake_I_dir, device)
+plot_random_pairs(val_image_dir_healthy, fake_I_dir)
+generate_fake_samples_without_masks(val_loader_pathological_no_masks, generator_P2H_no_masks, fake_J_dir, device)
+plot_random_pairs(val_image_dir_pathological, fake_J_dir)
+generate_fake_samples_without_masks(test_loader_healthy_no_masks, generator_H2P_no_masks, fake_K_dir, device)
+plot_random_pairs(test_image_dir_healthy, fake_K_dir)
+generate_fake_samples_without_masks(test_loader_pathological_no_masks, generator_P2H_no_masks, fake_L_dir, device)
+plot_random_pairs(test_image_dir_pathological, fake_L_dir)
 
 # Step 8: Train 4 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, real + synthetic data for fake images created from a CycleGAN trained with binary masks, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
 base_dir = '/the OG folder with the entire BRACS Dataset (real and synthetic)/'
