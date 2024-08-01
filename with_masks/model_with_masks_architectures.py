@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import itertools
-import os
 from torchvision import models
 from torchvision.models.resnet import ResNet34_Weights
 import torch.nn.functional as F
