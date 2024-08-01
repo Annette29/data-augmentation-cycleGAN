@@ -7,7 +7,7 @@ from with_masks.extract_patches_without_lesions import process_svs_files as proc
 from with_masks.train_cyclegan_with_masks import initialize_components as initialize_components_masks, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function
 from with_masks.cyclegan_with_masks_evaluation import evaluate_model
 from preprocess_NN_training_data import load_all_datasets, combine_datasets
-from without_masks.train_cyclegan_without_masks import 
+from without_masks.train_cyclegan_without_masks import initialize_components as initialize_components_without_masks, train_cyclegan_without_masks
 from with_masks.augment_original_dataset_with_masks import setup_directories, generate_fake_samples, plot_random_pairs
 from without_masks.augment_original_dataset_without_masks import 
 from classification_task import initialize_model, train_model
@@ -93,7 +93,7 @@ main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_l
 # Step 5: Evaluate the CycleGAN model using IoU and SSIM metrics 
 (
     generator_H2P, test_loader_healthy, test_loader_pathological
-) = initialize_components(device)
+) = initialize_components_masks(device)
 
 avg_iou_healthy, avg_ssim_healthy = evaluate_model(generator_H2P, test_loader_healthy, device)
 print(f'Average IoU (Healthy): {avg_iou_healthy}')
@@ -106,6 +106,26 @@ print(f'Average IoU (Pathological): {avg_iou_pathological}')
 print(f'Average SSIM (Pathological): {avg_ssim_pathological}')
 
 # Step 6: Train a CycleGAN model to synthesize pathology onto healthy images without any conditional input
+(
+    generator_H2P, generator_P2H, discriminator_H, discriminator_P,
+    train_loader_healthy_no_masks, train_loader_pathological_no_masks, val_loader_healthy_no_masks, val_loader_pathological_no_masks,
+    optimizer_G, optimizer_D_H, optimizer_D_P,
+    scheduler_G, scheduler_D_H, scheduler_D_P,
+    criterion_identity, criterion_cycle, 
+    wgan_gp_loss
+) = initialize_components_without_masks(device)
+
+train_cyclegan_without_masks(
+    generator_H2P, generator_P2H, discriminator_H, discriminator_P,
+    train_loader_healthy_no_masks, train_loader_pathological_no_masks, val_loader_healthy_no_masks, val_loader_pathological_no_masks,
+    optimizer_G, optimizer_D_H, optimizer_D_P,
+    scheduler_G, scheduler_D_H, scheduler_D_P,
+    criterion_identity, criterion_cycle, 
+    wgan_gp_loss, clip_value, lambda_cycle, lambda_identity, 
+    smooth_real_label, smooth_fake_label,
+    checkpoint_path_no_masks, save_interval, sample_interval, num_epochs, early_stopping_patience,
+    device    
+)
 
 # Step 7: Add synthetic images (created from a CycleGAN trained with binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities
 (
