@@ -4,10 +4,10 @@ import torch
 from with_masks.generate_binary_masks import process_files
 from with_masks.extract_patches_with_lesions import resize_images_cv, process_svs_files as process_folder_with_lesions
 from with_masks.extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
-from with_masks.train_cyclegan_with_masks import initialize_components as initialize_components_masks, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function
+from with_masks.train_cyclegan_with_masks import initialize_components as initialize_components_masks, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function as main_plotting_function_masks
 from with_masks.cyclegan_with_masks_evaluation import evaluate_model
 from preprocess_NN_training_data import load_all_datasets, combine_datasets
-from without_masks.train_cyclegan_without_masks import initialize_components as initialize_components_without_masks, train_cyclegan_without_masks
+from without_masks.train_cyclegan_without_masks import initialize_components as initialize_components_without_masks, train_cyclegan_without_masks, main_plotting_function as main_plotting_function_without_masks
 from with_masks.augment_original_dataset_with_masks import setup_directories, generate_fake_samples, plot_random_pairs
 from without_masks.augment_original_dataset_without_masks import 
 from classification_task import initialize_model, train_model
@@ -85,7 +85,7 @@ train_cyclegan_with_masks(
 visualize_activations(generator_H2P, test_loader_healthy, device)
 visualize_activations(generator_P2H, test_loader_pathological, device)
 
-# Plot random pairs of images for visual inspection 
+# Plot random sets of images for visual inspection 
 num_healthy_samples_test = len(test_loader_healthy.dataset)
 test_loader_pathological = limit_samples(test_loader_pathological, num_healthy_samples_test)
 main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, num_images=5, save_dir=plot_dir)
@@ -126,6 +126,11 @@ train_cyclegan_without_masks(
     checkpoint_path_no_masks, save_interval, sample_interval, num_epochs, early_stopping_patience,
     device    
 )
+
+# Plot random pairs of images for visual inspection 
+num_healthy_samples_test = len(test_loader_healthy_no_masks.dataset)
+test_loader_pathological_no_masks = limit_samples(test_loader_pathological_no_masks, num_healthy_samples_test)
+main_plotting_function_without_masks(generator_H2P, generator_P2H, test_loader_healthy_no_masks, test_loader_pathological_no_masks, num_images=5, save_dir=plot_dir)
 
 # Step 7: Add synthetic images (created from a CycleGAN trained with binary masks) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities
 (
