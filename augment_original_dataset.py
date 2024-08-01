@@ -20,7 +20,7 @@ def setup_directories(base_dir, categories, sub_dirs):
             dir_path = os.path.join(base_dir, category, sub_dir)
             os.makedirs(dir_path, exist_ok=True)
 
-def generate_fake_samples_masks(data_loader, generator, output_dir, device, suffix='_fake'):
+def generate_fake_samples_masks(generator, data_loader, output_dir, suffix='_fake'):
     generator.eval()
     with torch.no_grad():
         for batch_idx, (real_images, masks, image_names) in enumerate(data_loader):
