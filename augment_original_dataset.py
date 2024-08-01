@@ -2,17 +2,41 @@ import os
 import torch
 from torchvision import transforms
 
-from with_masks.train_cyclegan_with_masks import initialize_components
+from with_masks.train_cyclegan_with_masks import initialize_components as initialize_components_masks
+from without_masks.train_cyclegan_without_masks import initialize_components as initialize_components_without_masks
 
-(
-    generator_H2P, generator_P2H
-) = initialize_components(device)
+def initialize_and_load_generators(device, checkpoint_path, checkpoint_path_no_masks, epoch_to_load):
+    # Initialize generators with masks
+    generator_H2P_masks, generator_P2H_masks = initialize_components_masks(device)
+    generator_H2P_masks.load_state_dict(
+        torch.load(os.path.join(checkpoint_path, f'generator_H2P_masks_epoch{epoch_to_load}.pth'))
+    )
+    generator_P2H_masks.load_state_dict(
+        torch.load(os.path.join(checkpoint_path, f'generator_P2H_masks_epoch{epoch_to_load}.pth'))
+    )
+    
+    # Initialize generators without masks
+    generator_H2P_without, generator_P2H_without = initialize_components_without_masks(device)
+    generator_H2P_without.load_state_dict(
+        torch.load(os.path.join(checkpoint_path_no_masks, f'generator_H2P_without_epoch{epoch_to_load}.pth'))
+    )
+    generator_P2H_without.load_state_dict(
+        torch.load(os.path.join(checkpoint_path_no_masks, f'generator_P2H_without_epoch{epoch_to_load}.pth'))
+    )
+    
+    return {
+        'with_masks': (generator_H2P_masks, generator_P2H_masks),
+        'without_masks': (generator_H2P_without, generator_P2H_without)
+    }
 
 # Load previously-saved model checkpoint
-checkpoint_path = '/your/model checkpoints/folder'
+checkpoint_path = '/your/model with masks checkpoints/folder'
+checkpoint_path_no_masks = '/your/model without masks checkpoints/folder'
 epoch_to_load = # latest_model_checkpoint_saved e.g. 1000 if training stopped at epoch1000
-generator_H2P.load_state_dict(torch.load(os.path.join(checkpoint_path, f'generator_H2P_epoch{epoch_to_load}.pth')))
-generator_P2H.load_state_dict(torch.load(os.path.join(checkpoint_path, f'generator_P2H_epoch{epoch_to_load}.pth')))
+
+generators = initialize_and_load_generators(device, checkpoint_path, checkpoint_path_no_masks, epoch_to_load)
+generator_H2P_masks, generator_P2H_masks = generators['with_masks']
+generator_H2P_without, generator_P2H_without = generators['without_masks']
 
 def setup_directories(base_dir, categories, sub_dirs):
     for category in categories:
