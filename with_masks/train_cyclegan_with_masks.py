@@ -15,8 +15,6 @@ import gc
 import itertools
 from tempfile import TemporaryDirectory
 
-device = "cuda" if torch.cuda.is_available() else "CPU"
-
 from with_masks.preprocess_GAN_training_data_with_masks import create_dataloaders
 from with_masks.model_with_masks_architectures import UNetResNet34, PatchGANDiscriminator, weights_init_normal, WassersteinLossGP, CombinedL1L2Loss, AbnormalityMaskLoss
 
