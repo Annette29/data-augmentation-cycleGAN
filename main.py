@@ -8,8 +8,7 @@ from with_masks.train_cyclegan_with_masks import initialize_components as initia
 from with_masks.cyclegan_with_masks_evaluation import evaluate_model
 from preprocess_NN_training_data import load_all_datasets, combine_datasets
 from without_masks.train_cyclegan_without_masks import initialize_components as initialize_components_without_masks, train_cyclegan_without_masks, main_plotting_function as main_plotting_function_without_masks
-from with_masks.augment_original_dataset_with_masks import setup_directories, generate_fake_samples, plot_random_pairs
-from without_masks.augment_original_dataset_without_masks import 
+from augment_original_dataset import setup_directories, generate_fake_samples_masks, generate_fake_samples_without_masks, plot_random_pairs
 from classification_task import initialize_model, train_model
 from classification_task import plot_sensitivity_vs_fp_comparison as plot_sensitivity_vs_fp_comparison_masks
 from classification_task import plot_sensitivity_vs_fp_comparison as plot_sensitivity_vs_fp_comparison_without_masks
@@ -167,17 +166,17 @@ fake_E_dir = os.path.join(base_dir, 'Without Lesions', 'Test Data')
 fake_F_dir = os.path.join(base_dir, 'With Lesions', 'Test Data')
 
 # Generate fake samples for the respective data loaders and directories & select random images and their corresponding fakes from each dataset, and then plot them
-generate_fake_samples(train_loader_healthy, generator_H2P, fake_A_dir, device)
+generate_fake_samples_masks(train_loader_healthy, generator_H2P, fake_A_dir, device)
 plot_random_pairs(train_image_dir_healthy, fake_A_dir)
-generate_fake_samples(train_loader_pathological, generator_P2H, fake_B_dir, device)
+generate_fake_samples_masks(train_loader_pathological, generator_P2H, fake_B_dir, device)
 plot_random_pairs(train_image_dir_pathological, fake_B_dir)
-generate_fake_samples(val_loader_healthy, generator_H2P, fake_C_dir, device)
+generate_fake_samples_masks(val_loader_healthy, generator_H2P, fake_C_dir, device)
 plot_random_pairs(val_image_dir_healthy, fake_C_dir)
-generate_fake_samples(val_loader_pathological, generator_P2H, fake_D_dir, device)
+generate_fake_samples_masks(val_loader_pathological, generator_P2H, fake_D_dir, device)
 plot_random_pairs(val_image_dir_pathological, fake_D_dir)
-generate_fake_samples(test_loader_healthy, generator_H2P, fake_E_dir, device)
+generate_fake_samples_masks(test_loader_healthy, generator_H2P, fake_E_dir, device)
 plot_random_pairs(test_image_dir_healthy, fake_E_dir)
-generate_fake_samples(test_loader_pathological, generator_P2H, fake_F_dir, device)
+generate_fake_samples_masks(test_loader_pathological, generator_P2H, fake_F_dir, device)
 plot_random_pairs(test_image_dir_pathological, fake_F_dir)
 
 
