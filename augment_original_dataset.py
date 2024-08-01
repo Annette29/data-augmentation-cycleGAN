@@ -38,11 +38,12 @@ generators = initialize_and_load_generators(device, checkpoint_path, checkpoint_
 generator_H2P_masks, generator_P2H_masks = generators['with_masks']
 generator_H2P_without, generator_P2H_without = generators['without_masks']
 
-def setup_directories(base_dir, categories, sub_dirs):
-    for category in categories:
-        for sub_dir in sub_dirs:
-            dir_path = os.path.join(base_dir, category, sub_dir)
-            os.makedirs(dir_path, exist_ok=True)
+def setup_directories(base_dir, main_categories, sub_categories, sub_dirs):
+    for main_category in main_categories:
+        for sub_category in sub_categories:
+            for sub_dir in sub_dirs:
+                dir_path = os.path.join(base_dir, main_category, sub_category, sub_dir)
+                os.makedirs(dir_path, exist_ok=True)
 
 def generate_fake_samples_masks(generator, data_loader, output_dir, suffix='_fake'):
     generator.eval()
