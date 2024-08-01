@@ -17,6 +17,8 @@ from tempfile import TemporaryDirectory
 
 from with_masks.preprocess_GAN_training_data_with_masks import create_dataloaders
 from with_masks.model_with_masks_architectures import UNetResNet34, PatchGANDiscriminator, weights_init_normal, WassersteinLossGP, CombinedL1L2Loss, AbnormalityMaskLoss
+from without_masks.train_cyclegan_without_masks import plot_random_pairs
+from augment_original_dataset import generate_fake_samples_masks
 
 def initialize_components(device):
     # Create dataloaders for the training, validation, and test datasets for images with and without lesions & binary masks for images with lesions
@@ -443,26 +445,6 @@ def limit_samples(dataloader, num_samples):
 def denormalize(tensor):
     return tensor * 0.5 + 0.5
 
-# Function to generate fake images
-def generate_fake_images(generator, data_loader, output_dir):
-    os.makedirs(output_dir, exist_ok=True)
-    generator.eval()
-    with torch.no_grad():
-        for batch_idx, (real_images, masks, image_names) in enumerate(data_loader):
-            real_images = real_images.to(device)
-            masks = masks.to(device)
-
-            # Generate fake images
-            fake_images = generator(real_images, masks)
-
-            # Save fake images
-            for idx in range(fake_images.size(0)):
-                fake_image = fake_images[idx].detach().cpu()
-                fake_image = (fake_image + 1) / 2.0  # Denormalize to [0, 1]
-                fake_image = transforms.ToPILImage()(fake_image)
-                fake_image_name = f"{os.path.splitext(image_names[idx])[0]}_fake{os.path.splitext(image_names[idx])[1]}"
-                fake_image.save(os.path.join(output_dir, fake_image_name))
-
 # Function to plot real, mask, and fake image pairs
 def plot_random_pairs_P2H(real_dir, mask_dir, fake_dir, num_pairs=num_pairs, suffix='_fake', save_dir=None, plot_name='plot.png'):
     real_images = os.listdir(real_dir)
@@ -508,59 +490,17 @@ def plot_random_pairs_P2H(real_dir, mask_dir, fake_dir, num_pairs=num_pairs, suf
 
     plt.show()
 
-# Function to plot real, mask, and fake image pairs specific to H2P generator
-def plot_random_pairs_H2P(real_dir, mask_dir, fake_dir, num_pairs=num_pairs, suffix='_fake', save_dir=None, plot_name='plot_H2P.png'):
-    real_images = os.listdir(real_dir)
-    fake_images = os.listdir(fake_dir)
-
-    # Ensure the same number of images and matching filenames
-    real_images_set = set(os.path.splitext(f)[0] for f in real_images)
-    fake_images_set = set(os.path.splitext(f)[0].replace(suffix, '') for f in fake_images)
-    common_images = list(real_images_set & fake_images_set)
-
-    if len(common_images) < num_pairs:
-        raise ValueError("Not enough matching images in all directories to plot pairs.")
-
-    selected_basenames = random.sample(common_images, num_pairs)
-
-    fig, axes = plt.subplots(3, num_pairs, figsize=(15, 8))
-    fig.tight_layout()
-
-    for i in range(num_pairs):
-        real_image_name = selected_basenames[i] + ".png"  # or ".jpg"
-        real_image = Image.open(os.path.join(real_dir, real_image_name))
-        axes[0, i].imshow(real_image)
-        axes[0, 2].set_title('Original Images')
-        axes[0, i].axis('off')
-
-        mask_image_name = selected_basenames[i] + "_mask.png"  # or ".jpg"
-        mask_image = Image.open(os.path.join(mask_dir, random.choice(os.listdir(mask_dir))))  # Random mask
-        axes[1, i].imshow(mask_image, cmap='gray')
-        axes[1, 2].set_title('Binary Masks')
-        axes[1, i].axis('off')
-
-        fake_image_name = selected_basenames[i] + suffix + ".png"  # or ".jpg"
-        fake_image = Image.open(os.path.join(fake_dir, fake_image_name))
-        axes[2, i].imshow(fake_image)
-        axes[2, 2].set_title('Synthetic Images')
-        axes[2, i].axis('off')
-
-    if save_dir:
-        os.makedirs(save_dir, exist_ok=True)
-        plt.savefig(os.path.join(save_dir, plot_name))
-
-    plt.show()
 
 # Main function to handle both generators
 def main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, limit_samples, num_images=num_pairs, save_dir=save_dir):
     with TemporaryDirectory() as temp_dir_H2P, TemporaryDirectory() as temp_dir_P2H:
         generator_H2P, generator_P2H = load_generators(generator_H2P, generator_P2H, checkpoint_path, num_epochs, device)
         # Generate and save fake images
-        generate_fake_images(generator_H2P, test_loader_healthy, temp_dir_H2P)
-        generate_fake_images(generator_P2H, test_loader_pathological, temp_dir_P2H)
+        generate_fake_samples_masks(generator_H2P, test_loader_healthy, temp_dir_H2P)
+        generate_fake_samples_masks(generator_P2H, test_loader_pathological, temp_dir_P2H)
         
         # Plot random pairs for H2P
-        plot_random_pairs_H2P(without_lesions_svs_patches_dir, resized_mask_patches_dir, temp_dir_H2P, num_pairs=num_images, save_dir=save_dir)
+        plot_random_pairs(without_lesions_svs_patches_dir, resized_mask_patches_dir, temp_dir_H2P, num_pairs=num_images, save_dir=save_dir)
         
         # Plot random pairs for P2H
         plot_random_pairs_P2H(resized_lesions_svs_patches_dir, resized_mask_patches_dir, temp_dir_P2H, num_pairs=num_images, save_dir=save_dir)
