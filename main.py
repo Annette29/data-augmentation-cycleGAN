@@ -4,7 +4,7 @@ import torch
 from with_masks.generate_binary_masks import process_files
 from with_masks.extract_patches_with_lesions import resize_images_cv, process_svs_files as process_folder_with_lesions
 from with_masks.extract_patches_without_lesions import process_svs_files as process_folder_without_lesions
-from with_masks.train_cyclegan_with_masks import initialize_components, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function
+from with_masks.train_cyclegan_with_masks import initialize_components as initialize_components_masks, train_cyclegan_with_masks, visualize_activations, limit_samples, main_plotting_function
 from with_masks.cyclegan_with_masks_evaluation import evaluate_model
 from preprocess_NN_training_data import load_all_datasets, combine_datasets
 from without_masks.train_cyclegan_without_masks import 
@@ -67,7 +67,7 @@ print(f"\nProcessed {total_images_processed} SVS images without lesions and extr
     scheduler_G, scheduler_D_H, scheduler_D_P,
     criterion_identity, criterion_cycle, criterion_abnormality,
     wgan_gp_loss
-) = initialize_components(device)
+) = initialize_components_masks(device)
 
 train_cyclegan_with_masks(
     generator_H2P, generator_P2H, discriminator_H, discriminator_P,
