@@ -144,9 +144,10 @@ def plot_sensitivity_vs_fp_comparison(sensitivity_real, false_positives_real, se
 
 def initialize_model(weights):
     model = CustomDenseNet121(num_classes=2, weights=weights).to(device)
+    criterion = FocalLoss(alpha=2, gamma=3, reduction='mean')
     optimizer = optim.Adam(model.model.classifier.parameters(), lr=0.001, weight_decay=1e-5)
     scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
-    return model, optimizer, scheduler
+    return model, criterion, optimizer, scheduler
 
 def train_model(model, train_data, val_data, criterion, optimizer, scheduler, num_epochs=100, batch_size=32, threshold=0.7):
     best_model_wts = deepcopy(model.state_dict())
