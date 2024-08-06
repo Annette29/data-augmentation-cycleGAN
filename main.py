@@ -241,7 +241,7 @@ best_model_real, sensitivity_progression_real, false_positives_progression_real 
     criterion, optimizer, scheduler,
     num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
     batch_size=32,
-    threshold=0.7
+    threshold=0.5
 )
 
 best_model_synthetic, sensitivity_progression_synthetic, false_positives_progression_synthetic = train_model(
@@ -250,7 +250,7 @@ best_model_synthetic, sensitivity_progression_synthetic, false_positives_progres
     criterion, optimizer, scheduler,
     num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
     batch_size=32,
-    threshold=0.7
+    threshold=0.5
 )
 
 best_model_combined_masks, sensitivity_progression_combined_masks, false_positives_progression_combined_masks = train_model(
@@ -259,7 +259,7 @@ best_model_combined_masks, sensitivity_progression_combined_masks, false_positiv
     criterion, optimizer, scheduler,
     num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
     batch_size=32,
-    threshold=0.7
+    threshold=0.5
 )
 
 best_model_combined_without_masks, sensitivity_progression_combined_without_masks, false_positives_progression_combined_without_masks = train_model(
@@ -268,7 +268,7 @@ best_model_combined_without_masks, sensitivity_progression_combined_without_mask
     criterion, optimizer, scheduler,
     num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
     batch_size=32,
-    threshold=0.7
+    threshold=0.5
 )
 
 # Plot the sensitivity vs false positives comparison (using real, synthetic, and combined_masks data)
