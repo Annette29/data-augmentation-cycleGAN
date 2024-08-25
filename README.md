@@ -55,7 +55,7 @@ If you use this code or find our work helpful, please consider citing this paper
 ```bibtex
 @inproceedings{spie24,
   author = {{Annette Waithira Irungu} and {Kotaro Sonoda} and {Makoto Kawamoto} and {Kris Lami} and {Junya Fukuoka} and {Senya Kiyasu}},
-  title = {Enhancing mycobacterial disease detection with generative image translation},
+  title = {CycleGAN-driven data augmentation for improved neural network disease detection},
   booktitle = {SPIE/COS Photonics Asia},
   year = {2024},
   month = {oct},
