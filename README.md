@@ -3,8 +3,6 @@
 
 Please find and download the BRACS Dataset from here: https://www.bracs.icar.cnr.it/ 
 
-PS: This dataset is only for practice as we have trained our model using a private institutional dataset from Nagasaki University Hospital. However, please feel free to use the BRACS dataset to validate our method, as it is publicly available :)
-
 After downloading, please open the SVS files and their corresponding .qpdata annotations using the QuPath software, which you can install from here: https://qupath.github.io/
 
 Then, under the File tab, choose the Export objects as GeoJSON feature and select the Export as FeatureCollection option to create a .geojson file that you can use to create binary masks. Training our CycleGAN requires both an RGB image and a grayscale binary mask.
