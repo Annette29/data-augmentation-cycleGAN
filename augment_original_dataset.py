@@ -2,8 +2,7 @@ import os
 import torch
 from torchvision import transforms
 
-from with_masks.train_cyclegan_with_masks import initialize_components as initialize_components_masks
-from without_masks.train_cyclegan_without_masks import initialize_components as initialize_components_without_masks
+import initialize_components as initialize_components_masks
 
 def initialize_and_load_generators(device, checkpoint_path, checkpoint_path_no_masks, epoch_to_load):
     # Initialize generators with masks
@@ -15,28 +14,16 @@ def initialize_and_load_generators(device, checkpoint_path, checkpoint_path_no_m
         torch.load(os.path.join(checkpoint_path, f'generator_P2H_masks_epoch{epoch_to_load}.pth'))
     )
     
-    # Initialize generators without masks
-    generator_H2P_without, generator_P2H_without = initialize_components_without_masks(device)
-    generator_H2P_without.load_state_dict(
-        torch.load(os.path.join(checkpoint_path_no_masks, f'generator_H2P_without_epoch{epoch_to_load}.pth'))
-    )
-    generator_P2H_without.load_state_dict(
-        torch.load(os.path.join(checkpoint_path_no_masks, f'generator_P2H_without_epoch{epoch_to_load}.pth'))
-    )
-    
     return {
-        'with_masks': (generator_H2P_masks, generator_P2H_masks),
-        'without_masks': (generator_H2P_without, generator_P2H_without)
+        'with_masks': (generator_H2P_masks, generator_P2H_masks)
     }
 
-# Load previously-saved model checkpoint
+# Load previously saved model checkpoint
 checkpoint_path = '/your/model with masks checkpoints/folder'
-checkpoint_path_no_masks = '/your/model without masks checkpoints/folder'
 epoch_to_load = # latest_model_checkpoint_saved e.g. 1000 if training stopped at epoch1000
 
-generators = initialize_and_load_generators(device, checkpoint_path, checkpoint_path_no_masks, epoch_to_load)
+generators = initialize_and_load_generators(device, checkpoint_path, epoch_to_load)
 generator_H2P_masks, generator_P2H_masks = generators['with_masks']
-generator_H2P_without, generator_P2H_without = generators['without_masks']
 
 def setup_directories(base_dir, main_categories, sub_categories, sub_dirs):
     for main_category in main_categories:
@@ -65,23 +52,6 @@ def generate_fake_samples_masks(generator, data_loader, output_dir, suffix='_fak
                 fake_image_name = f"{os.path.splitext(image_names[idx])[0]}{suffix}{os.path.splitext(image_names[idx])[1]}"
 
                 # Save the fake image
-                fake_image.save(os.path.join(output_dir, fake_image_name))
-
-def generate_fake_samples_without_masks(generator, data_loader, output_dir, suffix='_fake'):
-    generator.eval()
-    with torch.no_grad():
-        for batch_idx, (real_images, image_names) in enumerate(data_loader):
-            real_images = real_images.to(device)
-
-            # Generate fake images
-            fake_images = generator(real_images)
-
-            # Save fake images
-            for idx in range(fake_images.size(0)):
-                fake_image = fake_images[idx].detach().cpu()
-                fake_image = (fake_image + 1) / 2.0  # Denormalize to [0, 1]
-                fake_image = transforms.ToPILImage()(fake_image)
-                fake_image_name = f"{os.path.splitext(image_names[idx])[0]}{suffix}{os.path.splitext(image_names[idx])[1]}"
                 fake_image.save(os.path.join(output_dir, fake_image_name))
 
 # Function that selects random images and their corresponding fakes from each dataset and then plots them
