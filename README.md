@@ -19,13 +19,9 @@ This repository contains scripts to help you:
 
 4. Train a CycleGAN model to synthesize pathology onto healthy images with binary masks as conditional input
 
-5. Evaluate the CycleGAN model using IoU and SSIM metrics 
+5. Add synthetic images to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
 
-6. Train a CycleGAN model to synthesize pathology onto healthy images without any conditional input
-
-7. Add synthetic images (created from 1. a CycleGAN trained with binary masks, 2. a CycleGAN trained with no conditional input) to the original training dataset for a classification task to evaluate whether fake images improve a neural network model's generalization abilities 
-
-8. Train 4 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, real + synthetic data for fake images created from a CycleGAN trained with binary masks, and real + synthetic data for fake images created from a CycleGAN trained without binary masks
+8. Train 6 model instances and measure the sensitivity of models trained with real data only, synthetic data only, real + synthetic data with and without classical data augmentation methods
 
 ---
 
