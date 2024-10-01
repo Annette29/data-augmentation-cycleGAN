@@ -16,7 +16,7 @@ def random_pathological_mask_name_func(image_name, healthy_mask_filenames):
     return random_mask_filename
 
 # Dataset class
-class OriginalDataset(Dataset):
+class BreastTissueDataset(Dataset):
     def __init__(self, image_dir, mask_dir, transform=None, mask_transform=None, mask_name_func=None, healthy_mask_filenames = None):
         self.image_dir = image_dir
         self.mask_dir = mask_dir
@@ -51,7 +51,7 @@ class OriginalDataset(Dataset):
             return None, None, image_name
 
 # Create dataloaders function
-def create_dataloaders(image_dir, mask_dir, batch_size=batch_size, num_workers=num_workers, shuffle=True, pin_memory=True, mask_name_func=None, healthy_mask_filenames=None, random_sampling=False):
+def create_dataloaders(image_dir, mask_dir, batch_size=8, num_workers=10, shuffle=True, pin_memory=True, mask_name_func=None, healthy_mask_filenames=None, random_sampling=False):
     if mask_name_func is None:
         mask_name_func = default_mask_name_func  # Default to using default_mask_name_func
 
@@ -68,7 +68,7 @@ def create_dataloaders(image_dir, mask_dir, batch_size=batch_size, num_workers=n
         transforms.Lambda(lambda x: x * 2 - 1)  # Normalize mask to [-1, 1]
     ])
 
-    dataset = OriginalDataset(image_dir, mask_dir, transform=transform, mask_transform=mask_transform, mask_name_func=mask_name_func, healthy_mask_filenames=healthy_mask_filenames)
+    dataset = BreastTissueDataset(image_dir, mask_dir, transform=transform, mask_transform=mask_transform, mask_name_func=mask_name_func, healthy_mask_filenames=healthy_mask_filenames)
 
     if random_sampling:
         sampler = RandomSampler(dataset)
