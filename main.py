@@ -143,46 +143,46 @@ combined_aug = combine_datasets(datasets_aug, counts_aug, augment=True)
 datasets_no_aug, filenames_no_aug, counts_no_aug = load_all_datasets(base_dir, augment=False)
 combined_no_aug = combine_datasets(datasets_no_aug, counts_no_aug, augment=False)
 
-# Now you should have:
-# - Real data with and without augmentations
-# - Synthetic data with and without augmentations
-# - Combined data with and without augmentations
-
 # Initialize model, optimizer, scheduler
 weights = None  # Set to None or a path to weights
 model, criterion, optimizer, scheduler = initialize_model(weights)
 
-# Train the model
-best_model_real, sensitivity_progression_real, false_positives_progression_real = train_model(
-    model,
-    train_real, val_real,
-    criterion, optimizer, scheduler,
-    num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
-    batch_size=32,
-    threshold=0.5
-)
+# Define datasets and labels: 1. Real data with and without augmentations, 2. Synthetic data with and without augmentations, & 3. Combined data with and without augmentations
+datasets = {
+    'real': (train_real, val_real),
+    'real_augmented': (train_real_aug, val_real_aug),
+    'synthetic': (train_synthetic, val_synthetic),
+    'synthetic_augmented': (train_synthetic_aug, val_synthetic_aug),
+    'combined': (train_combined_masks, val_combined_masks),
+    'combined_augmented': (train_combined_masks_aug, val_combined_masks_aug)
+}
 
-best_model_synthetic, sensitivity_progression_synthetic, false_positives_progression_synthetic = train_model(
-    model,
-    train_synthetic, val_synthetic,
-    criterion, optimizer, scheduler,
-    num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
-    batch_size=32,
-    threshold=0.5
-)
+# Define dictionaries to store the best models and progressions
+best_models = {}
+sensitivity_progressions = {}
+false_positives_progressions = {}
 
-best_model_combined, sensitivity_progression_combined, false_positives_progression_combined = train_model(
-    model,
-    train_combined_masks, val_combined_masks,
-    criterion, optimizer, scheduler,
-    num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
-    batch_size=32,
-    threshold=0.5
-)
+# Train each model variant
+for key, (train_data, val_data) in datasets.items():
+    best_model, sensitivity_progression, false_positives_progression = train_model(
+        model,
+        train_data, val_data,
+        criterion, optimizer, scheduler,
+        num_epochs=100,  # Training for 100 epochs
+        batch_size=32,
+        threshold=0.5
+    )
+    
+    # Store the results
+    best_models[key] = best_model
+    sensitivity_progressions[key] = sensitivity_progression
+    false_positives_progressions[key] = false_positives_progression
 
-# Plot the sensitivity vs false positives comparison (using real, synthetic, and combined data)
-plot_sensitivity_vs_fp_comparison_masks(
-    sensitivity_progression_real, false_positives_progression_real,
-    sensitivity_progression_synthetic, false_positives_progression_synthetic,
-    sensitivity_progression_combined_masks, false_positives_progression_combined_masks
+plot_sensitivity_vs_fp_comparison(
+    sensitivity_progressions['real'], false_positives_progressions['real'],
+    sensitivity_progressions['real_augmented'], false_positives_progressions['real_augmented'],
+    sensitivity_progressions['synthetic'], false_positives_progressions['synthetic'],
+    sensitivity_progressions['synthetic_augmented'], false_positives_progressions['synthetic_augmented'],
+    sensitivity_progressions['combined'], false_positives_progressions['combined'],
+    sensitivity_progressions['combined_augmented'], false_positives_progressions['combined_augmented']
 )
