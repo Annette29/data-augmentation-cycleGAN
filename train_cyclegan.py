@@ -50,15 +50,12 @@ def initialize_components(device):
                                              shuffle=False, random_sampling=True)
     
     # With Lesions
-    train_image_dir_pathological = os.path.join(base_dir, 'Resized With Lesions/Training Data')
     train_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Training Data'),
                                                    os.path.join(mask_base_dir, 'Resized With Lesions/Training Data'),
                                                    mask_name_func=default_mask_name_func)
-    val_image_dir_pathological = os.path.join(base_dir, 'Resized With Lesions/Validation Data')
     val_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Validation Data'),
                                                  os.path.join(mask_base_dir, 'Resized With Lesions/Validation Data'),
                                                  mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
-    test_image_dir_pathological = os.path.join(base_dir, 'Resized With Lesions/Test Data')
     test_loader_pathological = create_dataloaders(os.path.join(base_dir, 'Resized With Lesions/Test Data'),
                                                   os.path.join(mask_base_dir, 'Resized With Lesions/Test Data'),
                                                   mask_name_func=default_mask_name_func, shuffle=False, random_sampling=True)
@@ -489,6 +486,48 @@ def plot_random_pairs_P2H(real_dir, mask_dir, fake_dir, num_pairs=num_pairs, suf
 
     plt.show()
 
+# Separate function for H2P generator
+def plot_random_pairs_H2P(real_dir, mask_dir, fake_dir, num_pairs=5, suffix='_fake', save_dir=None, plot_name='plot_H2P.png'):
+    real_images = os.listdir(real_dir)
+    fake_images = os.listdir(fake_dir)
+
+    # Ensure the same number of images and matching filenames
+    real_images_set = set(os.path.splitext(f)[0] for f in real_images)
+    fake_images_set = set(os.path.splitext(f)[0].replace(suffix, '') for f in fake_images)
+    common_images = list(real_images_set & fake_images_set)
+
+    if len(common_images) < num_pairs:
+        raise ValueError("Not enough matching images in all directories to plot pairs.")
+
+    selected_basenames = random.sample(common_images, num_pairs)
+
+    fig, axes = plt.subplots(3, num_pairs, figsize=(15, 8))
+    fig.tight_layout()
+
+    for i in range(num_pairs):
+        real_image_name = selected_basenames[i] + ".png"  # or ".jpg"
+        real_image = Image.open(os.path.join(real_dir, real_image_name))
+        axes[0, i].imshow(real_image)
+        axes[0, 2].set_title('Original Images')
+        axes[0, i].axis('off')
+
+        mask_image_name = selected_basenames[i] + "_mask.png"  # or ".jpg"
+        mask_image = Image.open(os.path.join(mask_dir, random.choice(os.listdir(mask_dir))))  # Random mask
+        axes[1, i].imshow(mask_image, cmap='gray')
+        axes[1, 2].set_title('Binary Masks')
+        axes[1, i].axis('off')
+
+        fake_image_name = selected_basenames[i] + suffix + ".png"  # or ".jpg"
+        fake_image = Image.open(os.path.join(fake_dir, fake_image_name))
+        axes[2, i].imshow(fake_image)
+        axes[2, 2].set_title('Synthetic Images')
+        axes[2, i].axis('off')
+
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+        plt.savefig(os.path.join(save_dir, plot_name))
+
+    plt.show()
 
 # Main function to handle both generators
 def main_plotting_function(generator_H2P, generator_P2H, test_loader_healthy, test_loader_pathological, limit_samples, num_images=num_pairs, save_dir=save_dir):
