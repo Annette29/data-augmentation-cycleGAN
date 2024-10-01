@@ -25,12 +25,11 @@ epoch_to_load = # latest_model_checkpoint_saved e.g. 1000 if training stopped at
 generators = initialize_and_load_generators(device, checkpoint_path, epoch_to_load)
 generator_H2P_masks, generator_P2H_masks = generators['with_masks']
 
-def setup_directories(base_dir, main_categories, sub_categories, sub_dirs):
+def setup_directories(base_dir, main_categories, sub_categories):
     for main_category in main_categories:
         for sub_category in sub_categories:
-            for sub_dir in sub_dirs:
-                dir_path = os.path.join(base_dir, main_category, sub_category, sub_dir)
-                os.makedirs(dir_path, exist_ok=True)
+            dir_path = os.path.join(base_dir, main_category, sub_category)
+            os.makedirs(dir_path, exist_ok=True)
 
 def generate_fake_samples_masks(generator, data_loader, output_dir, suffix='_fake'):
     generator.eval()
