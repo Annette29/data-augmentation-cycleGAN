@@ -33,7 +33,7 @@ albumentations_transform = A.Compose([
 # Apply the albumentations transform
 transform = AlbumentationsTransform(albumentations_transform)
 
-def load_dataset(directory, transform):
+def load_dataset_plus_augmentations(directory, transform):
     dataset = []
     count = 0
     for root, _, files in os.walk(directory):
@@ -43,6 +43,24 @@ def load_dataset(directory, transform):
                 img = Image.open(file_path)
 
                 img = transform(img)
+                img = Ft.resize(img, (224, 224))
+
+                if not isinstance(img, torch.Tensor):
+                    img = Ft.to_tensor(img)
+
+                dataset.append((img, 0 if 'Without Lesions' in directory else 1))
+                count += 1
+    return dataset, count
+
+def load_dataset_no_augmentations(directory, transform):
+    dataset = []
+    count = 0
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if file.endswith(('jpg', 'jpeg', 'png')):
+                file_path = os.path.join(root, file)
+                img = Image.open(file_path)
+
                 img = Ft.resize(img, (224, 224))
 
                 if not isinstance(img, torch.Tensor):
