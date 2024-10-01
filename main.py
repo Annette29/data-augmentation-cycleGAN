@@ -105,19 +105,19 @@ test_loader_pathological = limit_samples(test_loader_pathological, num_healthy_s
 
 # Specify the base directory and the directory structure
 base_dir = "/your/synthetic_data/folder"
-sub_categories = ['Without Lesions', 'With Lesions']
-sub_dirs = ['Training Data', 'Validation Data', 'Test Data']
+main_categories = ['Without Lesions', 'With Lesions']
+sub_categories = ['Training Data', 'Validation Data', 'Test Data']
 
 # Ensure necessary directories exist
-setup_directories(base_dir, main_categories, sub_categories, sub_dirs)
+setup_directories(base_dir, main_categories, sub_categories)
 
 # Directories for saving fake images
-fake_A_dir = os.path.join(base_dir, 'With Masks', 'Without Lesions', 'Training Data')
-fake_B_dir = os.path.join(base_dir, 'With Masks', 'With Lesions', 'Training Data')
-fake_C_dir = os.path.join(base_dir, 'With Masks', 'Without Lesions', 'Validation Data')
-fake_D_dir = os.path.join(base_dir, 'With Masks', 'With Lesions', 'Validation Data')
-fake_E_dir = os.path.join(base_dir, 'With Masks', 'Without Lesions', 'Test Data')
-fake_F_dir = os.path.join(base_dir, 'With Masks', 'With Lesions', 'Test Data')
+fake_A_dir = os.path.join(base_dir, 'Without Lesions', 'Training Data')
+fake_B_dir = os.path.join(base_dir, 'With Lesions', 'Training Data')
+fake_C_dir = os.path.join(base_dir, 'Without Lesions', 'Validation Data')
+fake_D_dir = os.path.join(base_dir, 'With Lesions', 'Validation Data')
+fake_E_dir = os.path.join(base_dir, 'Without Lesions', 'Test Data')
+fake_F_dir = os.path.join(base_dir, 'With Lesions', 'Test Data')
 
 # Generate fake samples for the respective data loaders and directories & select random images and their corresponding fakes from each dataset, and then plot them
 generate_fake_samples_masks(train_loader_healthy, generator_H2P, fake_A_dir, device)
