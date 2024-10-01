@@ -35,6 +35,7 @@ transform = AlbumentationsTransform(albumentations_transform)
 
 def load_dataset_plus_augmentations(directory, transform):
     dataset = []
+    filenames = []
     count = 0
     for root, _, files in os.walk(directory):
         for file in files:
@@ -42,18 +43,30 @@ def load_dataset_plus_augmentations(directory, transform):
                 file_path = os.path.join(root, file)
                 img = Image.open(file_path)
 
+                # Apply transformations
                 img = transform(img)
+
+                # Convert back to PIL if the image is a NumPy array
+                if isinstance(img, np.ndarray):
+                    # Ensure image has correct shape and convert to uint8
+                    img = np.clip(img, 0, 255).astype(np.uint8)
+                    img = Image.fromarray(img)
+
+                # Ensure all images are resized to the same dimensions
                 img = Ft.resize(img, (224, 224))
 
-                if not isinstance(img, torch.Tensor):
-                    img = Ft.to_tensor(img)
+                # Convert to tensor
+                img = Ft.to_tensor(img)
 
-                dataset.append((img, 0 if 'Without Lesions' in directory else 1))
+                dataset.append((img, 0 if 'Without Lesions' in directory else 1))  # Assign label based on directory
+                filenames.append(file)  # Save just the filename
                 count += 1
-    return dataset, count
+
+    return dataset, filenames, count
 
 def load_dataset_no_augmentations(directory, transform):
     dataset = []
+    filenames = []
     count = 0
     for root, _, files in os.walk(directory):
         for file in files:
@@ -61,20 +74,33 @@ def load_dataset_no_augmentations(directory, transform):
                 file_path = os.path.join(root, file)
                 img = Image.open(file_path)
 
+                # Ensure all images are resized to the same dimensions
                 img = Ft.resize(img, (224, 224))
 
-                if not isinstance(img, torch.Tensor):
-                    img = Ft.to_tensor(img)
+                # Convert to tensor
+                img = Ft.to_tensor(img)
 
-                dataset.append((img, 0 if 'Without Lesions' in directory else 1))
+                dataset.append((img, 0 if 'Without Lesions' in directory else 1))  # Assign label based on directory
+                filenames.append(file)  # Save just the filename
                 count += 1
-    return dataset, count
+
+    return dataset, filenames, count
 
 def sample_dataset(dataset, num_samples):
     indices = random.sample(range(len(dataset)), num_samples)
     return Subset(dataset, indices)
 
-def load_all_datasets(base_dir):
+def load_dataset_augmented(directory, augment=True):
+    # Use augmentations if augment is True
+    transform = albumentations_transform if augment else None
+    return load_dataset_plus_augmentations(directory, transform)
+
+def load_dataset_no_augmented(directory):
+    # Load without augmentations
+    return load_dataset_no_augmentations(directory, None)
+
+
+def load_all_datasets(base_dir, augment=True):
     paths = {
         'train_real_with_lesions': f'{base_dir}/WSI Patches/Resized With Lesions/Training Data',
         'val_real_with_lesions': f'{base_dir}/WSI Patches/Resized With Lesions/Validation Data',
@@ -94,11 +120,14 @@ def load_all_datasets(base_dir):
     counts = {}
 
     for key, path in paths.items():
-        datasets[key], counts[key] = load_dataset(path, transform)
+        if augment:
+            datasets[key], counts[key] = load_dataset_augmented(path)
+        else:
+            datasets[key], counts[key] = load_dataset_no_augmented(path)
 
     return datasets, counts
 
-def combine_datasets(datasets, counts):
+def combine_datasets(datasets, counts, augment=True):
     def min_counts(keys):
         return min(counts[key] for key in keys)
 
