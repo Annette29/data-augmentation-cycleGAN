@@ -135,12 +135,18 @@ plot_random_pairs(test_image_dir_pathological, fake_F_dir)
 
 # Step 6: Train 6 independent sets of models and measure the sensitivity of models trained with real data only, synthetic data only, real + synthetic data for fake images with and without classical data augmentation
 base_dir = '/the OG folder with the entire BRACS Dataset (real and synthetic)/'
-datasets, counts = load_all_datasets(base_dir)
-train_combined, val_combined, test_combined = combine_datasets(datasets, counts)
+# Load all datasets with augmentations
+datasets_aug, filenames_aug, counts_aug = load_all_datasets(base_dir, augment=True)
+combined_aug = combine_datasets(datasets_aug, counts_aug, augment=True)
 
-train_combined_with_masks = combined_datasets['train_combined_with_masks']
-val_combined_with_masks = combined_datasets['val_combined_with_masks']
-test_combined_with_masks = combined_datasets['test_combined_with_masks']
+# Load all datasets without augmentations
+datasets_no_aug, filenames_no_aug, counts_no_aug = load_all_datasets(base_dir, augment=False)
+combined_no_aug = combine_datasets(datasets_no_aug, counts_no_aug, augment=False)
+
+# Now you should have:
+# - Real data with and without augmentations
+# - Synthetic data with and without augmentations
+# - Combined data with and without augmentations
 
 # Initialize model, optimizer, scheduler
 weights = None  # Set to None or a path to weights
@@ -167,7 +173,7 @@ best_model_synthetic, sensitivity_progression_synthetic, false_positives_progres
 
 best_model_combined, sensitivity_progression_combined, false_positives_progression_combined = train_model(
     model,
-    train_combined_masks, val_combined_masks,
+    train_combined, val_combined,
     criterion, optimizer, scheduler,
     num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
     batch_size=32,
@@ -175,8 +181,8 @@ best_model_combined, sensitivity_progression_combined, false_positives_progressi
 )
 
 # Plot the sensitivity vs false positives comparison (using real, synthetic, and combined data)
-plot_sensitivity_vs_fp_comparison_masks(
+plot_sensitivity_vs_fp_comparison(
     sensitivity_progression_real, false_positives_progression_real,
     sensitivity_progression_synthetic, false_positives_progression_synthetic,
-    sensitivity_progression_combined_masks, false_positives_progression_combined_masks
+    sensitivity_progression_combined, false_positives_progression_combined
 )
