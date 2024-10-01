@@ -173,7 +173,7 @@ best_model_synthetic, sensitivity_progression_synthetic, false_positives_progres
 
 best_model_combined, sensitivity_progression_combined, false_positives_progression_combined = train_model(
     model,
-    train_combined, val_combined,
+    train_combined_masks, val_combined_masks,
     criterion, optimizer, scheduler,
     num_epochs= 100, # Start by training for 100 epochs and observe the resulting output
     batch_size=32,
@@ -181,8 +181,8 @@ best_model_combined, sensitivity_progression_combined, false_positives_progressi
 )
 
 # Plot the sensitivity vs false positives comparison (using real, synthetic, and combined data)
-plot_sensitivity_vs_fp_comparison(
+plot_sensitivity_vs_fp_comparison_masks(
     sensitivity_progression_real, false_positives_progression_real,
     sensitivity_progression_synthetic, false_positives_progression_synthetic,
-    sensitivity_progression_combined, false_positives_progression_combined
+    sensitivity_progression_combined_masks, false_positives_progression_combined_masks
 )
