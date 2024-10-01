@@ -124,23 +124,51 @@ def smooth_curve(x, y, smooth_factor=300):
     y_smooth = spline(x_new)
     return x_new, y_smooth
 
-def plot_sensitivity_vs_fp_comparison(sensitivity_real, false_positives_real, sensitivity_synthetic, false_positives_synthetic, sensitivity_combined, false_positives_combined):
-    plt.figure(figsize=(10, 6))
-
+def plot_sensitivity_vs_fp_comparison(
+    sensitivity_progression_real, false_positives_progression_real,
+    sensitivity_progression_real_aug, false_positives_progression_real_aug,
+    sensitivity_progression_synthetic, false_positives_progression_synthetic,
+    sensitivity_progression_synthetic_aug, false_positives_progression_synthetic_aug,
+    sensitivity_progression_combined, false_positives_progression_combined,
+    sensitivity_progression_combined_aug, false_positives_progression_combined_aug
+):
+    # Create plots for each model instance (real, synthetic, combined) with and without augmentations
+    # First, smooth the curves for all 6 model instances
     x_smooth_real, y_smooth_real = smooth_curve(false_positives_real, sensitivity_real)
+    x_smooth_real_aug, y_smooth_real_aug = smooth_curve(false_positives_real_aug, sensitivity_real_aug)
+    
     x_smooth_synthetic, y_smooth_synthetic = smooth_curve(false_positives_synthetic, sensitivity_synthetic)
+    x_smooth_synthetic_aug, y_smooth_synthetic_aug = smooth_curve(false_positives_synthetic_aug, sensitivity_synthetic_aug)
+    
     x_smooth_combined, y_smooth_combined = smooth_curve(false_positives_combined, sensitivity_combined)
-
-    plt.plot(x_smooth_real, y_smooth_real, label='Real Data', color='blue')
-    plt.plot(x_smooth_synthetic, y_smooth_synthetic, label='Synthetic Data', color='green')
-    plt.plot(x_smooth_combined, y_smooth_combined, label='Combined Data', color='red')
-
-    plt.xlabel('Number of false positives')
-    plt.ylabel('Sensitivity [%]')
+    x_smooth_combined_aug, y_smooth_combined_aug = smooth_curve(false_positives_combined_aug, sensitivity_combined_aug)
+    
+    # Plot 6 lines in one figure comparing sensitivity vs false positives for each case
+    plt.figure(figsize=(10, 8))
+    
+    # Plot for real data
+    plt.plot(x_smooth_real, y_smooth_real, label='Real Data', color='blue', linestyle='-')
+    plt.plot(x_smooth_real_aug, y_smooth_real_aug, label='Real Data (Augmented)', color='blue', linestyle='--')
+    
+    # Plot for synthetic data
+    plt.plot(x_smooth_synthetic, y_smooth_synthetic, label='Synthetic Data', color='green', linestyle='-')
+    plt.plot(x_smooth_synthetic_aug, y_smooth_synthetic_aug, label='Synthetic Data (Augmented)', color='green', linestyle='--')
+    
+    # Plot for combined data
+    plt.plot(x_smooth_combined, y_smooth_combined, label='Combined Data', color='red', linestyle='-')
+    plt.plot(x_smooth_combined_aug, y_smooth_combined_aug, label='Combined Data (Augmented)', color='red', linestyle='--')
+    
+    # Add title, labels, and legend
+    plt.title('Sensitivity vs False Positives Comparison')
+    plt.xlabel('False Positives')
+    plt.ylabel('Sensitivity')
     plt.legend(loc='lower right', fontsize='small', ncol=2)
     plt.grid(True)
     plt.xlim(0, 300)
+
+    # Show the plot
     plt.show()
+
 
 def initialize_model(weights):
     model = CustomDenseNet121(num_classes=2, weights=weights).to(device)
