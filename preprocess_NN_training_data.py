@@ -69,13 +69,7 @@ def load_all_datasets(base_dir):
         'test_synthetic_with_masks_with_lesions': f'{base_dir}/Fake With Masks/With Lesions/Test Data',
         'train_synthetic_with_masks_without_lesions': f'{base_dir}/Fake With Masks/Without Lesions/Training Data',
         'val_synthetic_with_masks_without_lesions': f'{base_dir}/Fake With Masks/Without Lesions/Validation Data',
-        'test_synthetic_with_masks_without_lesions': f'{base_dir}/Fake With Masks/Without Lesions/Test Data',
-        'train_synthetic_without_masks_with_lesions': f'{base_dir}/Fake Without Masks/With Lesions/Training Data',
-        'val_synthetic_without_masks_with_lesions': f'{base_dir}/Fake Without Masks/With Lesions/Validation Data',
-        'test_synthetic_without_masks_with_lesions': f'{base_dir}/Fake Without Masks/With Lesions/Test Data',
-        'train_synthetic_without_masks_without_lesions': f'{base_dir}/Fake Without Masks/Without Lesions/Training Data',
-        'val_synthetic_without_masks_without_lesions': f'{base_dir}/Fake Without Masks/Without Lesions/Validation Data',
-        'test_synthetic_without_masks_without_lesions': f'{base_dir}/Fake Without Masks/Without Lesions/Test Data',
+        'test_synthetic_with_masks_without_lesions': f'{base_dir}/Fake With Masks/Without Lesions/Test Data'
     }
 
     datasets = {}
@@ -90,7 +84,7 @@ def combine_datasets(datasets, counts):
     def min_counts(keys):
         return min(counts[key] for key in keys)
 
-    # Real + Synthetic with Masks
+    # Real + Synthetic
     train_with_masks_keys = ['train_real_with_lesions', 'train_synthetic_with_masks_with_lesions']
     val_with_masks_keys = ['val_real_with_lesions', 'val_synthetic_with_masks_with_lesions']
     test_with_masks_keys = ['test_real_with_lesions', 'test_synthetic_with_masks_with_lesions']
@@ -109,30 +103,8 @@ def combine_datasets(datasets, counts):
         sample_dataset(datasets[key], min_test_with_masks) for key in test_with_masks_keys
     ])
 
-    # Real + Synthetic without Masks
-    train_without_masks_keys = ['train_real_with_lesions', 'train_synthetic_without_masks_with_lesions']
-    val_without_masks_keys = ['val_real_with_lesions', 'val_synthetic_without_masks_with_lesions']
-    test_without_masks_keys = ['test_real_with_lesions', 'test_synthetic_without_masks_with_lesions']
-
-    min_train_without_masks = min_counts(train_without_masks_keys)
-    min_val_without_masks = min_counts(val_without_masks_keys)
-    min_test_without_masks = min_counts(test_without_masks_keys)
-
-    train_combined_without_masks = ConcatDataset([
-        sample_dataset(datasets[key], min_train_without_masks) for key in train_without_masks_keys
-    ])
-    val_combined_without_masks = ConcatDataset([
-        sample_dataset(datasets[key], min_val_without_masks) for key in val_without_masks_keys
-    ])
-    test_combined_without_masks = ConcatDataset([
-        sample_dataset(datasets[key], min_test_without_masks) for key in test_without_masks_keys
-    ])
-
     return {
         'train_combined_with_masks': train_combined_with_masks,
         'val_combined_with_masks': val_combined_with_masks,
-        'test_combined_with_masks': test_combined_with_masks,
-        'train_combined_without_masks': train_combined_without_masks,
-        'val_combined_without_masks': val_combined_without_masks,
-        'test_combined_without_masks': test_combined_without_masks,
+        'test_combined_with_masks': test_combined_with_masks
     }
