@@ -15,9 +15,8 @@ import gc
 import itertools
 from tempfile import TemporaryDirectory
 
-from with_masks.preprocess_GAN_training_data_with_masks import create_dataloaders
-from with_masks.model_with_masks_architectures import UNetResNet34, PatchGANDiscriminator, weights_init_normal, WassersteinLossGP, CombinedL1L2Loss, AbnormalityMaskLoss
-from without_masks.train_cyclegan_without_masks import plot_random_pairs
+from preprocess_GAN_training_data import create_dataloaders
+from model_architectures import UNetResNet34, PatchGANDiscriminator, weights_init_normal, WassersteinLossGP, CombinedL1L2Loss, AbnormalityMaskLoss
 from augment_original_dataset import generate_fake_samples_masks
 
 def initialize_components(device):
