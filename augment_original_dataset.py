@@ -2,7 +2,7 @@ import os
 import torch
 from torchvision import transforms
 
-from train_cyclegan_with_masks import initialize_components as initialize_components_masks
+from train_cyclegan import initialize_components as initialize_components_masks
 
 def initialize_and_load_generators(device, checkpoint_path, checkpoint_path_no_masks, epoch_to_load):
     # Initialize generators with masks
