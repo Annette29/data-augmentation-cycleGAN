@@ -52,9 +52,12 @@ If you use this code or find our work helpful, please consider citing this paper
 @inproceedings{spie24,
   author = {{Annette Waithira Irungu} and {Kotaro Sonoda} and {Makoto Kawamoto} and {Kris Lami} and {Junya Fukuoka} and {Senya Kiyasu}},
   title = {CycleGAN-driven data augmentation for improved neural network disease detection},
-  booktitle = {SPIE/COS Photonics Asia},
+  booktitle = {Optics in health care and biomedical optics XIV},
   year = {2024},
-  month = {oct},
+  month = {nov},
+  vol = {132420O}
   address = {Nantong, Jiangsu, China}
+  publisher = {SPIE}
+  doi = {10.1117/12.3036252}
 }
 ```
