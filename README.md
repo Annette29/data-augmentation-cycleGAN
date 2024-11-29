@@ -55,7 +55,7 @@ If you use this code or find our work helpful, please consider citing this paper
   booktitle = {Optics in health care and biomedical optics XIV},
   year = {2024},
   month = {nov},
-  vol = {132420O}
+   vol = {132420O}
   address = {Nantong, Jiangsu, China}
   publisher = {SPIE}
   doi = {10.1117/12.3036252}
